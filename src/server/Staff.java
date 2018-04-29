@@ -37,13 +37,12 @@ public class Staff extends Model implements Runnable {
 
             Random rand = new Random();
             try {
-
                 Thread.sleep((rand.nextInt(40)+20)*10); // Simulates the time to prepare
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 
-            dishStock.addToStock(dish);
+            dishStock.addStock(dish);
             status = "idle";
     }
 

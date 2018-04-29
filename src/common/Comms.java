@@ -6,6 +6,8 @@ import java.net.Socket;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
+import server.ServerApplication;
+
 
 public class Comms extends Thread{
     Socket socket;
@@ -28,11 +30,11 @@ public class Comms extends Thread{
                 }
                 socket.close();
             } catch (IOException e) {
-                System.out.println(("Server: User disconnected");
+                System.out.println("Server: User disconnected");
                 e.printStackTrace();
             }
         } catch (IOException e1) {
-            System.out.println(("error in get input stream");
+            System.out.println("error in get input stream");
             e1.printStackTrace();
         }
 
@@ -47,9 +49,6 @@ public class Comms extends Thread{
 }
 
 /*
-Write a Comms class (and related classes, if required)
-that will handle communication between the stock management application
-and the client applications.
 
 Provide a 'sendMessage' method (or methods)
 that allows each client to send a message object to the business application

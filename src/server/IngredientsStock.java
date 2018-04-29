@@ -7,33 +7,35 @@ import common.Model;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class IngredientsStock implements Runnable{
     private Integer threshold;
-    private Map<Model, Integer> stock;
+    private Map<Ingredient, Integer> stock;
+    private Queue<Ingredient> restockQueue;
 
     public IngredientsStock(Integer threshold){
         this.threshold = threshold;
         stock = new ConcurrentHashMap<>();
+        restockQueue = new ConcurrentLinkedQueue<>();
     }
 
     @Override
     public void run() {
         //initial check
         //check again after request
-
         //only check thouse changed in future???
-        Iterator it = stock.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry<Model, Integer> pair = (Map.Entry)it.next();
-            if(pair.getValue() < threshold){
-                restock(pair.getKey());
-            }
-        }
+        checkStock();
+
     }
 
-    public boolean canIMake(Dish dish){
+    public void addStock(Ingredient ingredient){
+
+    }
+
+    public boolean takeStock(Dish dish){
         //checks if makable
        Iterator it = dish.getRecipe();
         while (it.hasNext()) {
@@ -50,19 +52,43 @@ public class IngredientsStock implements Runnable{
         it = dish.getRecipe();
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry)it.next();
-            //System.out.println(pair.getKey() + " = " + pair.getValue());
             Ingredient ingredient = (Ingredient) pair.getKey();
             Integer amount = (Integer) pair.getValue();
             stock.put(ingredient, stock.get(ingredient)-amount);
         }
+        checkStock();
         return true;
     }
 
-    public void restock(Model item){
-        //calls suplier
+    public void addToRestockQueue(Ingredient item){
+       restockQueue.add(item);
+    }
+
+    public void incomingRestock(Ingredient ingredient, Integer amount){
+        stock.put(ingredient, stock.get(ingredient)+amount);
+    }
+
+    public void checkStock(){
+        Iterator it = stock.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<Ingredient, Integer> pair = (Map.Entry)it.next();
+            if(pair.getValue() < threshold){
+                addToRestockQueue(pair.getKey());
+            }
+        }
     }
 
 }
+
+/*
+public synchronized Stock getStock() {
+		return stock;
+	}
+
+	public void setStock(Stock stock) {
+		this.stock = stock;
+	}
+ */
 
 
 /*
