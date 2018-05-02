@@ -17,10 +17,7 @@ public class Drone extends Model implements Runnable {
     @Override
     public void run() {
         while (true) { //forever
-            //if no dishes are in queue try again
-            if () {
-                dropOff();
-            }
+
         }
     }
 

@@ -618,12 +618,16 @@ public class ClientWindow extends JFrame implements UpdateListener {
 
 				@Override
 				public int getSize() {
-					return dataSource.get().size();
+					//TODO changed
+					return 0;
+					//return dataSource.get().size();
 				}
 
 				@Override
 				public T getElementAt(int index) {
-					return (T) dataSource.get().get(index);
+					//TODO changed
+					return null;
+					//return (T) dataSource.get().get(index);
 				}
 
 				@Override

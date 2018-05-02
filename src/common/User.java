@@ -1,20 +1,29 @@
 package common;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class User {
+public class User extends Model implements Serializable {
     private String name;
     private String password;
     private String address;
-    private String postCode;
-    public ArrayList<Order> orders = new ArrayList<Order>();
+    private Postcode postCode;
 
-    public User(String userName, String password, String address, String postCode)
+    public User(String userName, String password, String address, Postcode postCode)
     {
         this.name = userName;
         this.password = password;
         this.address = address;
         this.postCode = postCode;
+    }
+
+    public User(String userName, String password)
+    {
+        this.name = userName;
+        this.password = password;
     }
 
     //settos and gettos
@@ -26,7 +35,7 @@ public class User {
         return password;
     }
 
-    public String getPostCode() {
+    public Postcode getPostCode() {
         return postCode;
     }
 
@@ -36,6 +45,19 @@ public class User {
 
     public String getName() {
         return name;
+    }
+
+    public static  void writeTOFile(User user){
+        try {
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream("users.bin"));
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static  void readFile(){
+
     }
 
 }

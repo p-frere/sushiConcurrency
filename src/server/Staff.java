@@ -17,14 +17,14 @@ public class Staff extends Model implements Runnable {
     @Override
     public void run() {
         while (true) { //forever, for the works are slaves and get not holidays
-            Dish dish = dishStock.getNeedsCookin();
+            Dish dish = dishStock.getFromRestockQueue();
             //if no dishes are in queue try again
             if (dish != null) {
-                if(ingredientsStock.canIMake(dish)){  //should also remove stock if true
+                if(ingredientsStock.takeStock(dish)){  //should also remove stock if true
                     getCookin(dish);
                 }else {
                     //if you can't cook now add to back of queue
-                    dishStock.addToNeedsCookin(dish, 1);
+                    dishStock.addToRestockQueue(dish, 1);
                 }
             }
         }
@@ -38,12 +38,11 @@ public class Staff extends Model implements Runnable {
             Random rand = new Random();
             try {
                 Thread.sleep((rand.nextInt(40)+20)*10); // Simulates the time to prepare
+                dishStock.addStock(dish, 1);
+                status = "idle";
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-
-            dishStock.addStock(dish);
-            status = "idle";
     }
 
     @Override
@@ -75,8 +74,6 @@ This should take a random amount of time between some specified lower and upper 
 (for example 20-60 seconds). Make sure all your classes are synchronized appropriately,
 so that multiple kitchen staff threads can operate concurrently.
 
-A staff member should be able to return a text status which indicates its current job. If the staff member is performing no action, this should simply return "Idle".
-
-
-
+A staff member should be able to return a text status which indicates its current job.
+If the staff member is performing no action, this should simply return "Idle".
  */

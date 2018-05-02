@@ -31,8 +31,8 @@ public class IngredientsStock implements Runnable{
 
     }
 
-    public void addStock(Ingredient ingredient){
-
+    public void addStock(Ingredient ingredient, Integer amount){
+        stock.put(ingredient, stock.get(ingredient)+amount);
     }
 
     public boolean takeStock(Dish dish){
@@ -64,8 +64,12 @@ public class IngredientsStock implements Runnable{
        restockQueue.add(item);
     }
 
-    public void incomingRestock(Ingredient ingredient, Integer amount){
-        stock.put(ingredient, stock.get(ingredient)+amount);
+    public Ingredient getFromRestockQueue(){
+        if(!restockQueue.isEmpty()){
+            return restockQueue.poll();
+        } else {
+            return null;
+        }
     }
 
     public void checkStock(){

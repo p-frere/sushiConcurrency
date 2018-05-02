@@ -1,4 +1,4 @@
-package common;
+package server;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -6,16 +6,15 @@ import java.net.Socket;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
-import server.ServerApplication;
-
 
 public class Comms extends Thread{
     Socket socket;
+    ServerComms server;
 
     //Setup
     public Comms(Socket socket) {
         this.socket = socket;
-        ServerApplication.addUser(this);
+        ServerComms.addUser(this);
     }
 
     //Accepts content
@@ -55,15 +54,15 @@ that allows each client to send a message object to the business application
 and the business application to send a message to a specific client.
 
 The applications will also need to check for incoming messages
-by calling a 'receiveMessage' method (or methods) of the Comms class.
+by calling a 'receiveMessage' method (or methods) of the server.Comms class.
 
 The types of these may vary depending on the types of message being sent/received.
 
 
-If you prefer you may use Socket communication in the Comms
+If you prefer you may use Socket communication in the server.Comms
 the business and client applications should be oblivious to the actual communication mechanism
 used. That is, all I/O operations
-must reside in the Comms class.
+must reside in the server.Comms class.
 Access to them is only allowed via your
 send/receive methods above.
 

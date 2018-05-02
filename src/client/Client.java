@@ -5,15 +5,43 @@ import common.*;
 import java.util.List;
 import java.util.Map;
 
-public class Client implements  ClientInterface {
+public class Client implements ClientInterface {
+    ClientWindow window;
+    ClientComms comms;
+    User user;
+
+
+
+    public Client(){
+        window = new ClientWindow(this);
+        comms = new ClientComms(this);
+
+    }
+
     @Override
     public User register(String username, String password, String address, Postcode postcode) {
-        return null;
+        User newUser = new User(username, password, address, postcode);
+        comms.send(new Payload(newUser, TransactionType.requestRegister));
+
+        //this then needs to lock until notified
+        //the server will reply
+        //reply will be handled and user updated
+        //then return current user
+
+        return user;
     }
 
     @Override
     public User login(String username, String password) {
-        return null;
+        User returningUser = new User(username, password);
+        comms.send(new Payload(returningUser, TransactionType.requetLogin));
+
+        //this then needs to lock until notified
+        //the server will reply
+        //reply will be handled and user updated
+        //then return current user
+
+        return user;
     }
 
     @Override

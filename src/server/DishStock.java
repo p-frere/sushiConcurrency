@@ -1,5 +1,4 @@
 package server;
-
 import common.Dish;
 
 import java.util.Iterator;
@@ -11,13 +10,13 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class DishStock implements Runnable{
     private Integer threshold;
     private Map<Dish, Integer> stock;
-    private Queue<Dish> requestedDish;
+    private Queue<Dish> restockQueue;
 
 
     public DishStock(Integer threshold){
         this.threshold = threshold;
-        stock = new ConcurrentHashMap<>();
-        requestedDish = new ConcurrentLinkedQueue<>();
+        stock = new ConcurrentHashMap<>();              //lists stocks of dishes
+        restockQueue = new ConcurrentLinkedQueue<>();  //list of dishes that need to be made
     }
 
     @Override
@@ -29,13 +28,14 @@ public class DishStock implements Runnable{
     }
 
 
-    public void addStock(Dish dish){
-        requestedDish.add(dish);
+    public void addStock(Dish dish, Integer amount){
+        stock.put(dish, stock.get(dish)+amount);
     }
 
     public Dish takeStock(Dish dish, Integer quantity){
         if (stock.get(dish)-quantity > 0) {
             stock.put(dish, stock.get(dish) - quantity);
+            checkStock();
             return dish;
         } else {
             return null;
@@ -44,17 +44,17 @@ public class DishStock implements Runnable{
         }
     }
 
-    public Dish getRequestedDish(){
-        if(!requestedDish.isEmpty()){
-            return (Dish)requestedDish.poll();
-        } else {
-            return null;
+    public void addToRestockQueue(Dish dish, Integer amount){
+        for(int i = 0; i < amount; i++) {
+            restockQueue.add(dish);
         }
     }
 
-    public void addToRequestedDish(Dish dish, Integer amount){
-        for(int i = 0; i < amount; i++) {
-            requestedDish.add(dish);
+    public Dish getFromRestockQueue(){
+        if(!restockQueue.isEmpty()){
+            return restockQueue.poll();
+        } else {
+            return null;
         }
     }
 
@@ -63,7 +63,7 @@ public class DishStock implements Runnable{
         while (it.hasNext()) {
             Map.Entry<Dish, Integer> pair = (Map.Entry)it.next();
             if(pair.getValue() < threshold){
-                addToRequestedDish(pair.getKey(), threshold-pair.getValue());
+                addToRestockQueue(pair.getKey(), threshold-pair.getValue());
             }
         }
     }
