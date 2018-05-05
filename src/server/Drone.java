@@ -11,13 +11,14 @@ public class Drone extends Model implements Runnable {
     public Drone(Integer speed){
         this.speed = speed;
         status = DroneStatus.IDLE;
+        name = "droneSpeed"+speed;
     }
 
     @Override
     public void run() {
-        while (true) { //forever
-
-        }
+//        while (true) { //forever
+//
+//        }
     }
 
     //recover ingredients from supplier
@@ -54,7 +55,7 @@ public class Drone extends Model implements Runnable {
 
     @Override
     public String getName() {
-        return null;
+        return name;
     }
 }
 

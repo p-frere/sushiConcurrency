@@ -1,21 +1,20 @@
 package common;
 
 public class Supplier extends Model {
-    private double distance;
-    //items sold??
+    private Integer distance;
 
-    public Supplier(String name, double distance) {
-        this.setName(name);
+    public Supplier(String name, Integer distance) {
+        this.name = name;
         this.distance = distance;
     }
 
     //Sets & Gets
-    public double getDistance() {
+    public Integer getDistance() {
         return distance;
     }
 
     @Override
     public String getName() {
-        return null;
+        return name;
     }
 }

@@ -4,13 +4,13 @@ import java.util.Map;
 
 public class Dish extends Model {
     private String description;
-    private Double price;
+    private Integer price;
     //model gives name
     public Map<Ingredient, Number> recipe;
     private Integer restockThreshold;
     private Integer restockAmount;
 
-    public Dish(String name, String description, Double price, Integer restockThreshold, Integer restockAmount){
+    public Dish(String name, String description, Integer price, Integer restockThreshold, Integer restockAmount){
         this.name = name;
         this.description = description;
         this.price = price;
@@ -33,7 +33,7 @@ public class Dish extends Model {
         return description;
     }
 
-    public Double getPrice() {
+    public Integer getPrice() {
         return price;
     }
 

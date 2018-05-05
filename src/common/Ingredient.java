@@ -21,7 +21,7 @@ public class Ingredient extends Model {
     //Setters and Getters
     @Override
     public String getName() {
-        return null;
+        return name;
     }
 
     public String getUnit(){

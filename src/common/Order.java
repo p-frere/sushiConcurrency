@@ -22,7 +22,7 @@ public class Order extends Model {
 
     @Override
     public String getName() {
-        return null;
+        return "New Order";
     }
 
     public List<Dish> listItems(){
@@ -44,14 +44,21 @@ public class Order extends Model {
     }
 
     public Integer getOrderDistance(){
-        return (user.getPostCode().getDistance()).intValue();
+        return user.getPostCode().getDistance();
     }
 
-    public double getOrderCost(){
-        Double total = 0.0;
+    public Integer getOrderCost(){
+        Integer total = 0;
         for (Dish dish : basket.keySet()){
-            total+= (dish.getPrice() * (Double) basket.get(dish));
+            total+=(server*(Integer) basket.get(dish));
         }
+//        Iterator it = basket.entrySet().iterator();
+//        while (it.hasNext()) {
+//            Map.Entry pair = (Map.Entry)it.next();
+//            Dish dish = (Dish) pair.getKey();
+//            Integer amount = (Integer)pair.getValue();
+//            total+=(dish.getPrice()*amount);
+//        }
         return total;
     }
 

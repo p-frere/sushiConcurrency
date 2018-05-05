@@ -1,5 +1,6 @@
 package server;
 
+import client.Client;
 import common.Postcode;
 import common.User;
 
@@ -9,9 +10,12 @@ import java.util.HashMap;
 //write to file?
 
 public class Authenticate {
-    HashMap<String, User> users;
-    public Authenticate(){
+    private static HashMap<String, User> users;
+    private Server server;
+
+    public Authenticate(Server server){
         users = new HashMap<>();
+        this.server = server;
     }
 
     public User login(String username, String password){
@@ -32,7 +36,21 @@ public class Authenticate {
 
     }
 
-    public boolean checkExists(String username){
+    public boolean register(String username, User user ){
+        if (!checkExists(username))
+            return false;
+        else {
+            users.put(username, user);
+            return true;
+        }
+
+    }
+
+    public void removeUser(String username){
+        users.remove(username);
+    }
+
+    public static boolean checkExists(String username){
         return users.containsKey(username);
     }
 }

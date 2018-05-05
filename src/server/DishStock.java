@@ -9,8 +9,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class DishStock implements Runnable{
     private Map<Dish, Number> stock;
     private Queue<Dish> restockQueue;
+    private Server server;
 
-    public DishStock(){
+    public DishStock(Server server){
+        this.server = server;
         stock = new ConcurrentHashMap<>();              //lists stocks of dishes
         restockQueue = new ConcurrentLinkedQueue<>();  //list of dishes that need to be made
     }
@@ -24,7 +26,11 @@ public class DishStock implements Runnable{
     }
 
     public void addStock(Dish dish, Integer amount){
-        stock.put(dish, (Integer)stock.get(dish)+amount);
+        if(stock.containsKey(dish)) {
+            stock.put(dish, (Integer) stock.get(dish) + amount);
+        } else {
+            stock.put(dish, amount);
+        }
     }
 
     public Dish takeStock(Dish dish, Integer quantity){

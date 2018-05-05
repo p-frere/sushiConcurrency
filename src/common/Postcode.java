@@ -2,9 +2,9 @@ package common;
 
 public class Postcode extends Model {
     private String code;
-    private Double distance;
+    private Integer distance;
 
-    public Postcode(String code, Double distance){
+    public Postcode(String code, Integer distance){
         this.distance = distance;
         this.code = code;
     }
@@ -15,10 +15,10 @@ public class Postcode extends Model {
 
     @Override
     public String getName() {
-        return null;
+        return code;
     }
 
-    public Double getDistance() {
+    public Integer getDistance() {
         return distance;
     }
 }

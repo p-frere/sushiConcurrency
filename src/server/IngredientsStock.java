@@ -9,10 +9,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class IngredientsStock implements Runnable{
     private Map<Ingredient, Number> stock;
     private Queue<Ingredient> restockQueue;
+    private Server server;
 
-    public IngredientsStock(){
+    public IngredientsStock(Server server){
         stock = new ConcurrentHashMap<>();
         restockQueue = new ConcurrentLinkedQueue<>();
+        this.server = server;
     }
 
     @Override
@@ -25,7 +27,11 @@ public class IngredientsStock implements Runnable{
     }
 
     public void addStock(Ingredient ingredient, Integer amount){
-        stock.put(ingredient, (Integer)stock.get(ingredient)+amount);
+        if(stock.containsKey(ingredient)) {
+            stock.put(ingredient, (Integer) stock.get(ingredient) + amount);
+        }else {
+            stock.put(ingredient, amount);
+        }
     }
 
     public boolean takeStock(Dish dish){

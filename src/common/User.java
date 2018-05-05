@@ -62,9 +62,3 @@ public class User extends Model implements Serializable {
 
 }
 
-/*
-
-POSTCODE:SO17 1BJ:2
-USER:Admin:password:University Road:SO17 1BJ
-
- */

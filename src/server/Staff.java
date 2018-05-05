@@ -10,22 +10,25 @@ public class Staff extends Model implements Runnable {
 
     public Staff(String name){
         this.name = name;
+        status = StaffStatus.IDLE;
     }
 
     @Override
     public void run() {
-        while (true) { //forever, for the works are slaves and get not holidays
-            Dish dish = dishStock.getFromRestockQueue();
-            //if no dishes are in queue try again
-            if (dish != null) {
-                if(ingredientsStock.takeStock(dish)){  //should also remove stock if true
-                    getCookin(dish);
-                }else {
-                    //if you can't cook now add to back of queue
-                    dishStock.addToRestockQueue(dish, 1);
-                }
-            }
-        }
+
+//        while (true) { //forever, for the works are slaves and get not holidays
+//            Dish dish = dishStock.getFromRestockQueue();
+//            //if no dishes are in queue try again
+//            if (dish != null) {
+//                if(ingredientsStock.takeStock(dish)){  //should also remove stock if true
+//                    getCookin(dish);
+//                }else {
+//                    //if you can't cook now add to back of queue
+//                    dishStock.addToRestockQueue(dish, 1);
+//                }
+//            }
+//        }
+
     }
 
 
@@ -48,10 +51,7 @@ public class Staff extends Model implements Runnable {
     }
 
     public String getStatus(){
-        if (status != StaffStatus.IDLE)
-            return (getName() + ": I am " + status.toString());
-        else
-            return (getName() + ": I am IDLE");
+        return status.toString();
     }
 
 

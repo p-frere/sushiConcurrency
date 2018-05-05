@@ -50,7 +50,7 @@ public class Client implements ClientInterface {
         //reply will be handled and user updated
         //then return current user
 
-        return user;
+        return null;
     }
 
     @Override

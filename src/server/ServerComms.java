@@ -11,6 +11,10 @@ public class ServerComms {
     //keeps track of number of users
     static ArrayList<Comms> userlist = new ArrayList<Comms>();
 
+    private Server server;
+    public ServerComms(Server server){
+        this.server = server;
+    }
 
     //server setup
     public void initSocket() throws IOException {

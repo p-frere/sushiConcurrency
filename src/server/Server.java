@@ -8,18 +8,30 @@ import java.util.List;
 import java.util.Map;
 
 public class Server implements ServerInterface {
-    boolean restockingIngredientsEnabled;
-    boolean restockingDishesEnabled;
-    DishStock dishStock;
-    IngredientsStock ingredientsStock;
-    List<Drone> drones;
-    List<Staff> staffs;
-    List<Order> orders;
-    List<Postcode> postcodes;
-    List<User> users;
-    List<Supplier> suppliers;
+    private boolean restockingIngredientsEnabled;
+    private boolean restockingDishesEnabled;
+
+    //List of all available resources
+    //Do not represent actual items
+    //More like an index
+    private List<Drone> drones;
+    private List<Staff> staffs;
+    private List<Order> orders;
+    private List<Postcode> postcodes;
+    private List<User> users;
+    private List<Supplier> suppliers;
+    private List<Dish> dishes;
+    private List<Ingredient> ingredients;
+
+    private Authenticate authenticate;
+    private Config config;
+    private DishStock dishStock;
+    private IngredientsStock ingredientsStock;
+
+    private ServerComms serverComms;
 
     public Server(){
+        //init
         restockingIngredientsEnabled = true;
         restockingDishesEnabled = true;
         drones = new ArrayList<>();
@@ -28,11 +40,27 @@ public class Server implements ServerInterface {
         postcodes = new ArrayList<>();
         users = new ArrayList<>();
         suppliers = new ArrayList<>();
+        dishes = new ArrayList<>();
+        ingredients = new ArrayList<>();
+
+        //set up relations to classes
+        authenticate = new Authenticate(this);
+        config = new Config(this);
+        dishStock = new DishStock(this);
+        ingredientsStock = new IngredientsStock(this);
+        serverComms = new ServerComms(this);
+
+        //import settings
+        try {
+            loadConfiguration("src/config.txt");
+        }catch (Exception e){
+            System.err.println(e);
+        }
     }
 
     @Override
     public void loadConfiguration(String filename) throws FileNotFoundException {
-        //todo
+        config.readIn(filename);
     }
 
     @Override
@@ -55,21 +83,34 @@ public class Server implements ServerInterface {
         ingredientsStock.addStock(ingredient, (Integer) stock);
     }
 
+    //---------------------Dish--------------------------
     @Override
     public List<Dish> getDishes() {
         return dishStock.getDishes();
     }
 
+    public Dish getDish(String name){
+        for(Dish dish : dishes){
+            if (dish.getName().equals(name)){
+                return dish;
+            }
+        }
+        System.out.println("dish requested doesn't exist");
+        return null;
+    }
+
     @Override
     public Dish addDish(String name, String description, Number price, Number restockThreshold, Number restockAmount) {
-        Dish dish = new Dish(name, description, (double)price, (Integer)restockThreshold, (Integer)restockAmount);
+        Dish dish = new Dish(name, description, (Integer)price, (Integer)restockThreshold, (Integer)restockAmount);
         dishStock.addStock(dish, 1);
+        dishes.add(dish);
         return dish;
     }
 
     @Override
     public void removeDish(Dish dish) throws UnableToDeleteException {
         dishStock.removeStock(dish);
+        dishes.remove(dish);
     }
 
     @Override
@@ -112,6 +153,7 @@ public class Server implements ServerInterface {
         return dishStock.getStockLevels();
     }
 
+    //-----------------Ingredient-------------------------------
     @Override
     public List<Ingredient> getIngredients() {
         return ingredientsStock.getIngredients();
@@ -120,13 +162,25 @@ public class Server implements ServerInterface {
     @Override
     public Ingredient addIngredient(String name, String unit, Supplier supplier, Number restockThreshold, Number restockAmount) {
         Ingredient ingredient = new Ingredient(name, unit, supplier, (Integer)restockThreshold, (Integer)restockAmount);
-        ingredientsStock.addStock(ingredient, 0);
+        ingredientsStock.addStock(ingredient, (Integer)restockAmount);
+        ingredients.add(ingredient);
         return ingredient;
+    }
+
+    public Ingredient getIngredient(String ingredientName){
+        for(Ingredient item : ingredients){
+            if(item.getName().equals(ingredientName)){
+                return item;
+            }
+        }
+        System.out.println("Ingredient needed doesn't exist");
+        return null;
     }
 
     @Override
     public void removeIngredient(Ingredient ingredient) throws UnableToDeleteException {
         ingredientsStock.removeStock(ingredient);
+        ingredients.remove(ingredient);
     }
 
     @Override
@@ -149,14 +203,25 @@ public class Server implements ServerInterface {
         return ingredientsStock.getStockLevels();
     }
 
+    //---------------Supplier-------------------------------
     @Override
     public List<Supplier> getSuppliers() {
         return suppliers;
     }
 
+    public Supplier getSupplier(String name){
+        for(Supplier supplier : suppliers){
+            if (supplier.getName().equals(name)){
+                return supplier;
+            }
+        }
+        System.out.println("supplier requested doesn't exist");
+        return null;
+    }
+
     @Override
     public Supplier addSupplier(String name, Number distance) {
-        Supplier supplier = new Supplier(name, (Double) distance);
+        Supplier supplier = new Supplier(name, (Integer) distance);
         suppliers.add(supplier);
         return supplier;
     }
@@ -171,6 +236,7 @@ public class Server implements ServerInterface {
         return supplier.getDistance();
     }
 
+    //--------------Drone-------------------
     @Override
     public List<Drone> getDrones() {
         return drones;
@@ -201,6 +267,7 @@ public class Server implements ServerInterface {
         return drone.getStatus().toString();
     }
 
+    //---------Staff--------------------
     @Override
     public List<Staff> getStaff() {
         return staffs;
@@ -225,6 +292,7 @@ public class Server implements ServerInterface {
         return staff.getStatus();
     }
 
+    //-------------Order--------------------
     @Override
     public List<Order> getOrders() {
         return orders;
@@ -233,6 +301,10 @@ public class Server implements ServerInterface {
     @Override
     public void removeOrder(Order order) throws UnableToDeleteException {
         orders.remove(order);
+    }
+
+    public void addOrder(User user, Map<Dish, Number> basket){
+        orders.add(new Order(user, basket));
     }
 
     @Override
@@ -255,6 +327,7 @@ public class Server implements ServerInterface {
         return order.getOrderCost();
     }
 
+    //-------------Postcode--------------------------
     @Override
     public List<Postcode> getPostcodes() {
         return postcodes;
@@ -262,13 +335,25 @@ public class Server implements ServerInterface {
 
     @Override
     public void addPostcode(String code, Number distance) {
-        postcodes.add(new Postcode(code, (Double) distance));
+        postcodes.add(new Postcode(code, (Integer) distance));
+    }
+
+    public Postcode getPostcode(String code){
+        for (Postcode postcode : postcodes){
+            if(postcode.getPostcode().equals(code)){
+                return postcode;
+            }
+        }
+        System.out.println("postcode not found");
+        return null;
     }
 
     @Override
     public void removePostcode(Postcode postcode) throws UnableToDeleteException {
         postcodes.remove(postcode);
     }
+
+    //-------------Users------------------------------
 
     @Override
     public List<User> getUsers() {
@@ -278,6 +363,23 @@ public class Server implements ServerInterface {
     @Override
     public void removeUser(User user) throws UnableToDeleteException {
         users.remove(user);
+        authenticate.removeUser(user.getName());
+    }
+
+    public void addUser(String userName, String password, String address, Postcode postCode){
+        User user = new User(userName, password,address, postCode);
+        users.add(user);
+        authenticate.register(userName, user);
+    }
+
+    public User getUSer(String username){
+        for (User user : users){
+            if(user.getName().equals(username)){
+                return user;
+            }
+        }
+        System.out.println("postcode not found");
+        return null;
     }
 
     @Override
