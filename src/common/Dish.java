@@ -1,19 +1,21 @@
 package common;
 
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.Map;
 
 public class Dish extends Model {
     private String description;
     private Double price;
     //model gives name
-    public HashMap<Ingredient, Integer> ingredients;
+    public Map<Ingredient, Number> recipe;
+    private Integer restockThreshold;
+    private Integer restockAmount;
 
-    public Dish(String name, String description, Double price, HashMap<Ingredient, Integer> ingredients){
-        this.ingredients = ingredients;
+    public Dish(String name, String description, Double price, Integer restockThreshold, Integer restockAmount){
         this.name = name;
         this.description = description;
         this.price = price;
+        this.restockAmount = restockAmount;
+        this.restockThreshold = restockThreshold;
     }
 
     //Getters and setters
@@ -22,8 +24,9 @@ public class Dish extends Model {
         return name;
     }
 
-    public Iterator getRecipe(){
-        return  ingredients.entrySet().iterator();
+    public Map<Ingredient, Number> getRecipe(){
+        //return  recipe.entrySet().iterator();
+        return recipe;
     }
 
     public String getDescription() {
@@ -34,6 +37,28 @@ public class Dish extends Model {
         return price;
     }
 
+    public void addIngredient(Ingredient ingredient, Integer amount){
+        recipe.put(ingredient, amount);
+    }
 
+    public void removeIngredient(Ingredient ingredient){
+        recipe.remove(ingredient);
+    }
 
+    public void setRecipe(Map<Ingredient, Number> map){
+        recipe = map;
+    }
+
+    public void setRestock(Integer restockThreshold, Integer restockAmount){
+        this.restockAmount = restockAmount;
+        this.restockThreshold = restockThreshold;
+    }
+
+    public Integer getRestockThreshold() {
+        return restockThreshold;
+    }
+
+    public Integer getRestockAmount() {
+        return restockAmount;
+    }
 }

@@ -2,6 +2,8 @@ package client;
 
 import common.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -10,12 +12,19 @@ public class Client implements ClientInterface {
     ClientComms comms;
     User user;
 
-
+    List<Postcode> postcodes;
+    List<Dish> dishes;
+    Map<Dish, Number> basket;
+    List<Order> orders;
 
     public Client(){
         window = new ClientWindow(this);
         comms = new ClientComms(this);
 
+        postcodes = new ArrayList<>();
+        dishes = new ArrayList<>();
+        basket = new HashMap<>();
+        orders = new ArrayList<>();
     }
 
     @Override
@@ -46,77 +55,91 @@ public class Client implements ClientInterface {
 
     @Override
     public List<Postcode> getPostcodes() {
-        return null;
+        return postcodes;
     }
 
     @Override
     public List<Dish> getDishes() {
-        return null;
+        return dishes;
     }
 
     @Override
     public String getDishDescription(Dish dish) {
-        return null;
+        return dish.getDescription();
     }
 
     @Override
     public Number getDishPrice(Dish dish) {
-        return null;
+        return dish.getPrice();
     }
 
     @Override
     public Map<Dish, Number> getBasket(User user) {
-        return null;
+        return basket;
     }
 
     @Override
     public Number getBasketCost(User user) {
-        return null;
+        Double total = 0.0;
+        for(Dish dish : basket.keySet()){
+            total+=(dish.getPrice() * (Integer)basket.get(dish));
+        }
+        return total;
     }
 
     @Override
     public void addDishToBasket(User user, Dish dish, Number quantity) {
-
+        basket.put(dish, quantity);
     }
 
     @Override
     public void updateDishInBasket(User user, Dish dish, Number quantity) {
-
+        basket.put(dish, quantity);
     }
 
     @Override
     public Order checkoutBasket(User user) {
+        Order order = new Order(user, basket);
+        orders.add(order);
+        comms.send(new Payload(order, TransactionType.requestPurchase));
+
+        //this then needs to lock until notified
+        //the server will reply
+        //reply will be handled and user updated
+        //then return current user
+
         return null;
     }
 
     @Override
     public void clearBasket(User user) {
-
+        basket.clear();
     }
 
     @Override
     public List<Order> getOrders(User user) {
-        return null;
+        return orders;
     }
 
     @Override
     public boolean isOrderComplete(Order order) {
-        return false;
+        return (order.getStatus() == OrderStatus.COMPLETE);
     }
 
     @Override
     public String getOrderStatus(Order order) {
-        return null;
+        return order.getStatus().toString();
     }
 
     @Override
     public Number getOrderCost(Order order) {
-        return null;
+        return order.getOrderCost();
     }
 
     @Override
     public void cancelOrder(Order order) {
-
+        comms.send(new Payload(order, TransactionType.requestCancel));
+        orders.remove(order);
     }
 
     @Override

@@ -1,23 +1,16 @@
 package server;
-
 import common.Dish;
 import common.Ingredient;
-import common.Model;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class IngredientsStock implements Runnable{
-    private Integer threshold;
-    private Map<Ingredient, Integer> stock;
+    private Map<Ingredient, Number> stock;
     private Queue<Ingredient> restockQueue;
 
-    public IngredientsStock(Integer threshold){
-        this.threshold = threshold;
+    public IngredientsStock(){
         stock = new ConcurrentHashMap<>();
         restockQueue = new ConcurrentLinkedQueue<>();
     }
@@ -32,36 +25,38 @@ public class IngredientsStock implements Runnable{
     }
 
     public void addStock(Ingredient ingredient, Integer amount){
-        stock.put(ingredient, stock.get(ingredient)+amount);
+        stock.put(ingredient, (Integer)stock.get(ingredient)+amount);
     }
 
     public boolean takeStock(Dish dish){
         //checks if makable
-       Iterator it = dish.getRecipe();
+       Iterator it = dish.getRecipe().entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry)it.next();
             //System.out.println(pair.getKey() + " = " + pair.getValue());
             Ingredient ingredient = (Ingredient) pair.getKey();
-            Double amount = (Double)pair.getValue();
+            Integer amount = (Integer)pair.getValue();
 
-            if (amount > stock.get(ingredient)){
+            if (amount > (Integer) stock.get(ingredient)){
                 return false;
             }
         }
         //and remove ingrients
-        it = dish.getRecipe();
+        it = dish.getRecipe().entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry)it.next();
             Ingredient ingredient = (Ingredient) pair.getKey();
             Integer amount = (Integer) pair.getValue();
-            stock.put(ingredient, stock.get(ingredient)-amount);
+            stock.put(ingredient, (Integer)stock.get(ingredient)-amount);
         }
         checkStock();
         return true;
     }
 
-    public void addToRestockQueue(Ingredient item){
-       restockQueue.add(item);
+    public void addToRestockQueue(Ingredient item, Integer amount){
+        for(int i = 0; i < amount; i++) {
+            restockQueue.add(item);
+        }
     }
 
     public Ingredient getFromRestockQueue(){
@@ -72,14 +67,35 @@ public class IngredientsStock implements Runnable{
         }
     }
 
+    //checks if restock is needed
     public void checkStock(){
         Iterator it = stock.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<Ingredient, Integer> pair = (Map.Entry)it.next();
-            if(pair.getValue() < threshold){
-                addToRestockQueue(pair.getKey());
+            Ingredient ingredient = (Ingredient) pair.getKey();
+            Integer amount = (Integer) pair.getValue();
+            if(amount < ingredient.getRestockThreshold()){
+                addToRestockQueue(ingredient, ingredient.getRestockThreshold()-amount);
             }
         }
+    }
+
+
+    public void removeStock(Ingredient ingredient){
+        stock.remove(ingredient);
+        //todo unable to delete exception
+    }
+
+    public List<Ingredient> getIngredients(){
+        List<Ingredient> list = new ArrayList<>();
+        for (Ingredient item : stock.keySet()){
+            list.add(item);
+        }
+        return list;
+    }
+
+    public Map<Ingredient, Number> getStockLevels(){
+        return stock;
     }
 
 }

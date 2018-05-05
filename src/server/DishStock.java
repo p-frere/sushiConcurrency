@@ -1,20 +1,16 @@
 package server;
 import common.Dish;
 
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Queue;
+
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class DishStock implements Runnable{
-    private Integer threshold;
-    private Map<Dish, Integer> stock;
+    private Map<Dish, Number> stock;
     private Queue<Dish> restockQueue;
 
-
-    public DishStock(Integer threshold){
-        this.threshold = threshold;
+    public DishStock(){
         stock = new ConcurrentHashMap<>();              //lists stocks of dishes
         restockQueue = new ConcurrentLinkedQueue<>();  //list of dishes that need to be made
     }
@@ -27,22 +23,20 @@ public class DishStock implements Runnable{
         checkStock();
     }
 
-
     public void addStock(Dish dish, Integer amount){
-        stock.put(dish, stock.get(dish)+amount);
+        stock.put(dish, (Integer)stock.get(dish)+amount);
     }
 
     public Dish takeStock(Dish dish, Integer quantity){
-        if (stock.get(dish)-quantity > 0) {
-            stock.put(dish, stock.get(dish) - quantity);
+        if ((Integer)stock.get(dish)-quantity > 0) {
+            stock.put(dish, (Integer)stock.get(dish) - quantity);
             checkStock();
             return dish;
         } else {
             return null;
-            //what is the thresh hold?
-            //do I need to put more requests on queue
         }
     }
+
 
     public void addToRestockQueue(Dish dish, Integer amount){
         for(int i = 0; i < amount; i++) {
@@ -58,13 +52,34 @@ public class DishStock implements Runnable{
         }
     }
 
+    //checks if restock needed
     public void checkStock(){
         Iterator it = stock.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<Dish, Integer> pair = (Map.Entry)it.next();
-            if(pair.getValue() < threshold){
-                addToRestockQueue(pair.getKey(), threshold-pair.getValue());
+            Dish dish = (Dish) pair.getKey();
+            Integer amount = (Integer) pair.getValue();
+            if(amount < dish.getRestockThreshold()){
+                addToRestockQueue(dish, dish.getRestockThreshold()-amount);
             }
         }
+    }
+
+    public void removeStock(Dish dish){
+        stock.remove(dish);
+        //todo unable to delete exception
+    }
+
+    public List<Dish> getDishes(){
+        List<Dish> list = new ArrayList<>();
+        for (Dish dish : stock.keySet()){
+            list.add(dish);
+        }
+
+        return list;
+    }
+
+    public Map<Dish, Number> getStockLevels() {
+        return stock;
     }
 }

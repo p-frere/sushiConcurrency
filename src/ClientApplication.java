@@ -2,14 +2,8 @@
 import client.Client;
 
 import java.io.IOException;
-import java.io.PrintStream;
-import java.net.Socket;
-import java.util.Scanner;
 
 public class ClientApplication {
-    Socket socket;
-    Client client;
-
 
     public static void main(String[] args) throws IOException {
         Client client = new Client();

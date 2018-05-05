@@ -3,15 +3,13 @@ import java.util.Random;
 import common.*;
 
 public class Staff extends Model implements Runnable {
-    private String status;
+    private StaffStatus status;
     private DishStock dishStock;
     private IngredientsStock ingredientsStock;
     private String name;
 
-    public Staff(String name, DishStock dishStock, IngredientsStock ingredientsStock){
+    public Staff(String name){
         this.name = name;
-        this.dishStock = dishStock;
-        this.ingredientsStock = ingredientsStock;
     }
 
     @Override
@@ -32,17 +30,16 @@ public class Staff extends Model implements Runnable {
 
 
     public void getCookin(Dish dish) {
-            status = "Cooking up a storm";
-            getStatus(); //prints
+        status = StaffStatus.COOKING;
+        Random rand = new Random();
+        try {
+            Thread.sleep((rand.nextInt(40)+20)*10); // Simulates the time to prepare
+            dishStock.addStock(dish, 1);
 
-            Random rand = new Random();
-            try {
-                Thread.sleep((rand.nextInt(40)+20)*10); // Simulates the time to prepare
-                dishStock.addStock(dish, 1);
-                status = "idle";
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        status = StaffStatus.IDLE;
     }
 
     @Override
@@ -50,11 +47,11 @@ public class Staff extends Model implements Runnable {
         return name;
     }
 
-    public void getStatus(){
-        if (!status.equals("idle"))
-            System.out.println(getName() + ": I am " + status);
+    public String getStatus(){
+        if (status != StaffStatus.IDLE)
+            return (getName() + ": I am " + status.toString());
         else
-            System.out.println(getName() + ": I am idle");
+            return (getName() + ": I am IDLE");
     }
 
 

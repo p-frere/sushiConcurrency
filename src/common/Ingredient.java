@@ -1,14 +1,20 @@
 package common;
 
+import java.util.Map;
+
 public class Ingredient extends Model {
     //model gives it name
     private String unit;
     private Supplier supplier;
+    Integer restockThreshold;
+    Integer restockAmount;
 
-    public Ingredient(String name, String unit, Supplier supplier){
+    public Ingredient(String name, String unit, Supplier supplier, Integer restockThreshold, Integer restockAmount){
         this.name = name;
         this.unit = unit;
         this.supplier = supplier;
+        this.restockAmount = restockAmount;
+        this.restockThreshold = restockThreshold;
     }
 
 
@@ -24,5 +30,18 @@ public class Ingredient extends Model {
 
     public Supplier getSupplier(){
         return supplier;
+    }
+
+    public void setRestock(Integer restockThreshold, Integer restockAmount){
+        this.restockAmount = restockAmount;
+        this.restockThreshold = restockThreshold;
+    }
+
+    public Integer getRestockThreshold() {
+        return restockThreshold;
+    }
+
+    public Integer getRestockAmount() {
+        return restockAmount;
     }
 }

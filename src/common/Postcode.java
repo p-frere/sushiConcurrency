@@ -1,24 +1,24 @@
 package common;
 
 public class Postcode extends Model {
-    private User user;
-    private String postcode;
+    private String code;
+    private Double distance;
 
-    public Postcode(User user, String postcode){
-        this.user = user;
-        this.postcode = postcode;
+    public Postcode(String code, Double distance){
+        this.distance = distance;
+        this.code = code;
     }
 
     public String getPostcode() {
-        return postcode;
-    }
-
-    public User getUser() {
-        return user;
+        return code;
     }
 
     @Override
     public String getName() {
         return null;
+    }
+
+    public Double getDistance() {
+        return distance;
     }
 }
