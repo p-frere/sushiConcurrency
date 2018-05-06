@@ -1,5 +1,7 @@
 package common;
 
+import server.Server;
+
 import java.util.*;
 
 //----TODO-------
@@ -12,7 +14,6 @@ public class Order extends Model {
     private User user;
     private OrderStatus status;
     private Map<Dish, Number> basket;
-
 
     public Order(User customer, Map<Dish, Number> basket) {
         this.user = customer;
@@ -49,16 +50,17 @@ public class Order extends Model {
 
     public Integer getOrderCost(){
         Integer total = 0;
-        for (Dish dish : basket.keySet()){
-            total+=(server*(Integer) basket.get(dish));
-        }
-//        Iterator it = basket.entrySet().iterator();
-//        while (it.hasNext()) {
-//            Map.Entry pair = (Map.Entry)it.next();
-//            Dish dish = (Dish) pair.getKey();
-//            Integer amount = (Integer)pair.getValue();
-//            total+=(dish.getPrice()*amount);
+//        for (Dish dish : basket.keySet()){
+//            //System.out.println(dish.getPrice());
+//            total+=(5*(Integer) basket.get(dish));
 //        }
+        Iterator it = basket.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry)it.next();
+            Dish dish = (Dish) pair.getKey();
+            Integer amount = (Integer)pair.getValue();
+            total+=(dish.getPrice()*amount);
+        }
         return total;
     }
 

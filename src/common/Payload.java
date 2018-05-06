@@ -14,4 +14,8 @@ public class Payload implements Serializable{
     public TransactionType getTransactionType() {
         return transactionType;
     }
+
+    public Model getObject() {
+        return object;
+    }
 }

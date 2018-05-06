@@ -9,56 +9,31 @@ import java.io.PrintStream;
 import java.net.Socket;
 import java.util.Scanner;
 
-public class ClientComms {
-    Socket socket;
-    Client client;
+public class ClientComms implements Runnable{
 
-    public ClientComms(Client client){
-        this.client = client;
-    }
+    @Override
+    public void run() {
+        System.out.println("Listening...");
+        ObjectInputStream objectInputStream = null;
 
-    // Client Setup
-    public void initSocket() throws IOException {
         try {
-            socket = new Socket("127.0.0.1", 1342);
-        } catch (IOException e) {
-            System.out.println("socket delceration error");
-            e.printStackTrace();
-        }
-
-        // accepting something from the server
-        ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-        try {
-            Payload payload = (Payload)ois.readObject();
-            switch (payload.getTransactionType()){
-                case replyLogin:
-                    break;
-                case replyOrder:
-                    break;
-                case replyStock:
-                    break;
-                default:
-                    System.out.println("Unknown package sent");
-                    break;
+            //Socket socket = new Socket("127.0.0.1", 1342);
+            objectInputStream = new ObjectInputStream(Client.socket.getInputStream());
+            while(true) {
+                Payload payload = (Payload) objectInputStream.readObject();
+                System.out.println("recived");
+                doSomething(payload);
             }
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
-        }
-
-    }
-
-    // sends submitted text to server
-    public void send(Payload payload) {
-        //todo fix to object serilization
-        // passes to the server with the username
-        PrintStream ps;
-        try {
-            ps = new PrintStream(socket.getOutputStream());
-            ps.println(payload);
-
         } catch (IOException e) {
-            System.out.println("error in print stream");
             e.printStackTrace();
         }
+
     }
+
+    public void doSomething(Payload payload){
+
+    }
+
 }

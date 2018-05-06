@@ -1,6 +1,5 @@
 package server;
 
-import client.Client;
 import common.Postcode;
 import common.User;
 

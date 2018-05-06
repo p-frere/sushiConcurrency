@@ -40,6 +40,7 @@ public class Config {
 
             case "INGREDIENT":
                 server.addIngredient(words[1], words[2], server.getSupplier(words[3]), Integer.valueOf(words[4]), Integer.valueOf(words[5]));
+                //server.addDish(words[1], "It's just "+words[1],5, 1, 10);
                 break;
 
             case "DISH":
@@ -66,7 +67,7 @@ public class Config {
                 String[] dishxQuantity = words[2].split(",");
                 Map<Dish, Number> basket = new HashMap<>();
                 for(String item : dishxQuantity){
-                    String[] splitItems = item.split(" * ");
+                    String[] splitItems = item.split(" \\* ");
                     basket.put(server.getDish(splitItems[1]), Integer.valueOf(splitItems[0]));
                 }
                 server.addOrder(server.getUSer(words[1]),basket);

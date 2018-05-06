@@ -2,6 +2,9 @@ package client;
 
 import common.*;
 
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,20 +20,52 @@ public class Client implements ClientInterface {
     Map<Dish, Number> basket;
     List<Order> orders;
 
+    public static Socket socket;
+    ObjectOutputStream objectOutputStream;
+
     public Client(){
-        window = new ClientWindow(this);
-        comms = new ClientComms(this);
+
 
         postcodes = new ArrayList<>();
         dishes = new ArrayList<>();
         basket = new HashMap<>();
         orders = new ArrayList<>();
+
+        window = new ClientWindow(this);
+        initSocket();
     }
+
+    //-----------Comms---------------------
+
+    public void initSocket()  {
+        try {
+            socket = new Socket("localhost", 4444);
+            System.out.println("init socket");
+            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            new Thread(new ClientComms()).start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // sends submitted text to server
+    public void send(Payload payload) {
+        try {
+            objectOutputStream.writeObject(payload);
+            System.out.println("Sent message");
+        } catch (IOException e) {
+            System.out.println("error in print stream");
+            e.printStackTrace();
+        }
+    }
+
+
+    //------------User------------------------
 
     @Override
     public User register(String username, String password, String address, Postcode postcode) {
         User newUser = new User(username, password, address, postcode);
-        comms.send(new Payload(newUser, TransactionType.requestRegister));
+        send(new Payload(newUser, TransactionType.requestRegister));
 
         //this then needs to lock until notified
         //the server will reply
@@ -43,7 +78,7 @@ public class Client implements ClientInterface {
     @Override
     public User login(String username, String password) {
         User returningUser = new User(username, password);
-        comms.send(new Payload(returningUser, TransactionType.requetLogin));
+        send(new Payload(returningUser, TransactionType.requetLogin));
 
         //this then needs to lock until notified
         //the server will reply
@@ -101,7 +136,7 @@ public class Client implements ClientInterface {
     public Order checkoutBasket(User user) {
         Order order = new Order(user, basket);
         orders.add(order);
-        comms.send(new Payload(order, TransactionType.requestPurchase));
+        send(new Payload(order, TransactionType.requestPurchase));
 
         //this then needs to lock until notified
         //the server will reply
@@ -138,7 +173,7 @@ public class Client implements ClientInterface {
 
     @Override
     public void cancelOrder(Order order) {
-        comms.send(new Payload(order, TransactionType.requestCancel));
+        send(new Payload(order, TransactionType.requestCancel));
         orders.remove(order);
     }
 

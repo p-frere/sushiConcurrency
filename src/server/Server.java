@@ -3,7 +3,9 @@ package server;
 import common.*;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,6 +31,8 @@ public class Server implements ServerInterface {
     private IngredientsStock ingredientsStock;
 
     private ServerComms serverComms;
+    public static final int PORT = 4444;
+    private List<ServerComms> userThreads;
 
     public Server(){
         //init
@@ -48,14 +52,18 @@ public class Server implements ServerInterface {
         config = new Config(this);
         dishStock = new DishStock(this);
         ingredientsStock = new IngredientsStock(this);
-        serverComms = new ServerComms(this);
 
-        //import settings
+        //import settings for testing
+        //todo remove later
         try {
             loadConfiguration("src/config.txt");
         }catch (Exception e){
             System.err.println(e);
         }
+
+        //server setup
+        userThreads = new ArrayList<>();
+        initSocket();
     }
 
     @Override
@@ -83,6 +91,45 @@ public class Server implements ServerInterface {
         ingredientsStock.addStock(ingredient, (Integer) stock);
     }
 
+    //-----------------Communication--------------------------------
+    public void initSocket() {
+        System.out.println("init socket");
+        new Thread(new Comms(this)).start();
+    }
+
+//    //sends to all users
+//    public void sendToAll(Payload payload) {
+//        System.out.println("send to all");
+//        //for all threads, send the message back
+//        for(ServerComms st : userThreads){
+//            try {
+//                st.sendMessage(payload);
+//            } catch (IOException e) {
+//                System.out.println("can't relay info to all threads");
+//                e.printStackTrace();
+//            }
+//        }
+//
+//    }
+//
+//    public void sendToUser(Integer id, Payload payload) {
+//        System.out.println("send to user");
+//            try {
+//                userThreads.get(id).sendMessage(payload);
+//            } catch (IOException e) {
+//                System.out.println("can't relay info to thread");
+//                e.printStackTrace();
+//            }
+//    }
+
+    public void addUserThread(ServerComms sc){
+        userThreads.add(sc);
+    }
+
+    public void removeUserThread(String username){
+        userThreads.remove(username);
+    }
+
     //---------------------Dish--------------------------
     @Override
     public List<Dish> getDishes() {
@@ -102,7 +149,7 @@ public class Server implements ServerInterface {
     @Override
     public Dish addDish(String name, String description, Number price, Number restockThreshold, Number restockAmount) {
         Dish dish = new Dish(name, description, (Integer)price, (Integer)restockThreshold, (Integer)restockAmount);
-        dishStock.addStock(dish, 1);
+        dishStock.addStock(dish, 0);
         dishes.add(dish);
         return dish;
     }
@@ -162,7 +209,7 @@ public class Server implements ServerInterface {
     @Override
     public Ingredient addIngredient(String name, String unit, Supplier supplier, Number restockThreshold, Number restockAmount) {
         Ingredient ingredient = new Ingredient(name, unit, supplier, (Integer)restockThreshold, (Integer)restockAmount);
-        ingredientsStock.addStock(ingredient, (Integer)restockAmount);
+        ingredientsStock.addStock(ingredient, 0);
         ingredients.add(ingredient);
         return ingredient;
     }
@@ -370,6 +417,10 @@ public class Server implements ServerInterface {
         User user = new User(userName, password,address, postCode);
         users.add(user);
         authenticate.register(userName, user);
+    }
+
+    public User login(User user){
+        return authenticate.login(user.getUserName(), user.getPassword());
     }
 
     public User getUSer(String username){
