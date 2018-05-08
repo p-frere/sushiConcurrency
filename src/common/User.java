@@ -47,18 +47,5 @@ public class User extends Model implements Serializable {
         return name;
     }
 
-    public static  void writeTOFile(User user){
-        try {
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream("users.bin"));
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static  void readFile(){
-
-    }
-
 }
 

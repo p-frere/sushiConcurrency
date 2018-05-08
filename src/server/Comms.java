@@ -21,7 +21,7 @@ public class Comms extends Thread{ //listner
         ServerSocket serverSocket = null;
         try {
             serverSocket = new ServerSocket(Server.PORT);
-            System.out.println("Listner Started");
+            System.out.println("Listening for new clients...");
 
             while (true) {
                 //server listens for connections

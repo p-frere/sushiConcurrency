@@ -1,8 +1,9 @@
 package common;
 
+import java.io.Serializable;
 import java.util.Map;
 
-public class Dish extends Model {
+public class Dish extends Model implements Serializable{
     private String description;
     private Integer price;
     //model gives name
@@ -11,7 +12,7 @@ public class Dish extends Model {
     private Integer restockAmount;
 
     public Dish(String name, String description, Integer price, Integer restockThreshold, Integer restockAmount){
-        this.name = name;
+        setName(name);
         this.description = description;
         this.price = price;
         this.restockAmount = restockAmount;
@@ -25,7 +26,6 @@ public class Dish extends Model {
     }
 
     public Map<Ingredient, Number> getRecipe(){
-        //return  recipe.entrySet().iterator();
         return recipe;
     }
 

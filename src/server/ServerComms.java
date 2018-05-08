@@ -1,5 +1,6 @@
 package server;
 
+import common.Order;
 import common.Payload;
 import common.TransactionType;
 import common.User;
@@ -31,13 +32,14 @@ public class ServerComms extends Thread {
         }
 
         System.out.println("added new client");
+        sendMessage(new Payload(server.getUpdate(), TransactionType.updateInfo));
     }
 
     public void run(){
         Payload payload = null;
         try {
             while ((payload = (Payload) objectInputStream.readObject()) != null) {
-                System.out.println("in loop");
+                System.out.println("listening...");
                 doSomething(payload);
             }
             socket.close();
@@ -51,7 +53,7 @@ public class ServerComms extends Thread {
 
     //Sends a message
     public void sendMessage(Payload payload) {
-        System.out.println("sending message");
+        System.out.println("sending payload ->");
         try {
             objectOutputStream.writeObject(payload);
         } catch (IOException e) {
@@ -60,13 +62,20 @@ public class ServerComms extends Thread {
     }
 
     public void doSomething(Payload payload){
-        System.out.println("recived payload");
+        System.out.println("...stopped listening");
+        System.out.println("received payload <-");
         switch (payload.getTransactionType()){
-            case requetLogin:
+            case requestLogin:
                 User user = server.login((User) payload.getObject());
                 sendMessage(new Payload(user, TransactionType.replyLogin));
                 break;
             case requestRegister:
+                User newUser = server.register((User) payload.getObject());
+                sendMessage(new Payload(newUser, TransactionType.requestRegister));
+                break;
+            case requestOrder:
+                Order incomingOrder = (Order) payload.getObject();
+                server.addOrder(incomingOrder);
                 break;
             default:
                 System.out.println("unknown request");

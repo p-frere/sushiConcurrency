@@ -4,13 +4,17 @@ import common.*;
 
 public class Staff extends Model implements Runnable {
     private StaffStatus status;
+    private Server server;
     private DishStock dishStock;
     private IngredientsStock ingredientsStock;
     private String name;
 
-    public Staff(String name){
-        this.name = name;
+    public Staff(String name, Server server){
+        setName(name);
         status = StaffStatus.IDLE;
+        this.server = server;
+        this.dishStock = server.getDishStock();
+        this.ingredientsStock = server.getIngredientsStock();
     }
 
     @Override
@@ -23,14 +27,12 @@ public class Staff extends Model implements Runnable {
 //                if(ingredientsStock.takeStock(dish)){  //should also remove stock if true
 //                    getCookin(dish);
 //                }else {
-//                    //if you can't cook now add to back of queue
-//                    dishStock.addToRestockQueue(dish, 1);
+//                    return;
 //                }
 //            }
 //        }
 
     }
-
 
     public void getCookin(Dish dish) {
         status = StaffStatus.COOKING;
@@ -53,8 +55,6 @@ public class Staff extends Model implements Runnable {
     public String getStatus(){
         return status.toString();
     }
-
-
 }
 
 

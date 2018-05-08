@@ -1,10 +1,12 @@
 package common;
 
-public class Supplier extends Model {
+import java.io.Serializable;
+
+public class Supplier extends Model implements Serializable {
     private Integer distance;
 
     public Supplier(String name, Integer distance) {
-        this.name = name;
+        setName(name);
         this.distance = distance;
     }
 

@@ -3,7 +3,6 @@ package server;
 import common.*;
 
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,8 +28,9 @@ public class Server implements ServerInterface {
     private Config config;
     private DishStock dishStock;
     private IngredientsStock ingredientsStock;
+    private OrderManager orderManager;
+    private Update update;
 
-    private ServerComms serverComms;
     public static final int PORT = 4444;
     private List<ServerComms> userThreads;
 
@@ -50,8 +50,11 @@ public class Server implements ServerInterface {
         //set up relations to classes
         authenticate = new Authenticate(this);
         config = new Config(this);
+
         dishStock = new DishStock(this);
         ingredientsStock = new IngredientsStock(this);
+        //orderManager = new OrderManager(this);
+
 
         //import settings for testing
         //todo remove later
@@ -64,11 +67,28 @@ public class Server implements ServerInterface {
         //server setup
         userThreads = new ArrayList<>();
         initSocket();
+
+//        Thread isThrd = new Thread(ingredientsStock);
+//        isThrd.start();
+//
+//        for (Drone drone : drones){
+//            new Thread(drone).start();
+//        }
+//        Thread dsThrd = new Thread(dishStock);
+//        dsThrd.start();
+//        Thread omThrd = new Thread(orderManager);
+//        omThrd.start();
     }
+
 
     @Override
     public void loadConfiguration(String filename) throws FileNotFoundException {
         config.readIn(filename);
+        update = new Update(dishes, postcodes);
+    }
+
+    public Update getUpdate() {
+        return update;
     }
 
     @Override
@@ -93,7 +113,6 @@ public class Server implements ServerInterface {
 
     //-----------------Communication--------------------------------
     public void initSocket() {
-        System.out.println("init socket");
         new Thread(new Comms(this)).start();
     }
 
@@ -148,7 +167,8 @@ public class Server implements ServerInterface {
 
     @Override
     public Dish addDish(String name, String description, Number price, Number restockThreshold, Number restockAmount) {
-        Dish dish = new Dish(name, description, (Integer)price, (Integer)restockThreshold, (Integer)restockAmount);
+        Dish dish = new Dish(name, description, price.intValue(), restockThreshold.intValue(), restockAmount.intValue());
+        dish.setRecipe(new HashMap<>());
         dishStock.addStock(dish, 0);
         dishes.add(dish);
         return dish;
@@ -268,7 +288,7 @@ public class Server implements ServerInterface {
 
     @Override
     public Supplier addSupplier(String name, Number distance) {
-        Supplier supplier = new Supplier(name, (Integer) distance);
+        Supplier supplier = new Supplier(name, distance.intValue());
         suppliers.add(supplier);
         return supplier;
     }
@@ -291,7 +311,7 @@ public class Server implements ServerInterface {
 
     @Override
     public Drone addDrone(Number speed) {
-        Drone drone = new Drone((Integer)speed);
+        Drone drone = new Drone((Integer)speed, this);
         drones.add(drone);
         return drone;
     }
@@ -322,7 +342,7 @@ public class Server implements ServerInterface {
 
     @Override
     public Staff addStaff(String name) {
-        Staff staff = new Staff(name);
+        Staff staff = new Staff(name, this);
         staffs.add(staff);
         return staff;
     }
@@ -343,15 +363,17 @@ public class Server implements ServerInterface {
     @Override
     public List<Order> getOrders() {
         return orders;
+
     }
 
     @Override
     public void removeOrder(Order order) throws UnableToDeleteException {
-        orders.remove(order);
+        orders.remove(order);   //removes from servers persistant list
     }
 
-    public void addOrder(User user, Map<Dish, Number> basket){
-        orders.add(new Order(user, basket));
+    public void addOrder(Order order){
+        orders.add(order);
+        orderManager.addOrder(order);
     }
 
     @Override
@@ -372,6 +394,15 @@ public class Server implements ServerInterface {
     @Override
     public Number getOrderCost(Order order) {
         return order.getOrderCost();
+    }
+
+    public void cancelOrder(Order order){
+        orderManager.cancelOrder(order);
+        try {
+            removeOrder(order);
+        } catch (UnableToDeleteException e) {
+            e.printStackTrace();
+        }
     }
 
     //-------------Postcode--------------------------
@@ -423,6 +454,10 @@ public class Server implements ServerInterface {
         return authenticate.login(user.getUserName(), user.getPassword());
     }
 
+    public User register(User user){
+        return authenticate.register(user.getUserName(), user);
+    }
+
     public User getUSer(String username){
         for (User user : users){
             if(user.getName().equals(username)){
@@ -433,9 +468,23 @@ public class Server implements ServerInterface {
         return null;
     }
 
+    //---------Stocks and Managers----------------------
+
+    public DishStock getDishStock() {
+       return dishStock;
+    }
+
+    public IngredientsStock getIngredientsStock() {
+        return ingredientsStock;
+    }
+
+    public OrderManager getOrderManager() {
+        return orderManager;
+    }
+
     @Override
     public void addUpdateListener(UpdateListener listener) {
-        //todo
+        //listners
     }
 
     @Override

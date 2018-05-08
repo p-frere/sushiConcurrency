@@ -1,6 +1,7 @@
 package client;
 
 import common.*;
+import javafx.geometry.Pos;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -31,8 +32,18 @@ public class Client implements ClientInterface {
         basket = new HashMap<>();
         orders = new ArrayList<>();
 
+        synchronized (this) {
+            initSocket();
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
         window = new ClientWindow(this);
-        initSocket();
+        getPostcodes();
+
     }
 
     //-----------Comms---------------------
@@ -42,7 +53,7 @@ public class Client implements ClientInterface {
             socket = new Socket("localhost", 4444);
             System.out.println("init socket");
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-            new Thread(new ClientComms()).start();
+            new Thread(new ClientComms(this)).start();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -59,7 +70,6 @@ public class Client implements ClientInterface {
         }
     }
 
-
     //------------User------------------------
 
     @Override
@@ -67,32 +77,68 @@ public class Client implements ClientInterface {
         User newUser = new User(username, password, address, postcode);
         send(new Payload(newUser, TransactionType.requestRegister));
 
-        //this then needs to lock until notified
-        //the server will reply
-        //reply will be handled and user updated
-        //then return current user
+        synchronized (this) {
+            System.out.println("register waiting...");
 
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            System.out.println("...register finished waiting");
+        }
         return user;
     }
 
     @Override
     public User login(String username, String password) {
         User returningUser = new User(username, password);
-        send(new Payload(returningUser, TransactionType.requetLogin));
+        send(new Payload(returningUser, TransactionType.requestLogin));
 
-        //this then needs to lock until notified
-        //the server will reply
-        //reply will be handled and user updated
-        //then return current user
+        synchronized (this) {
+            System.out.println("login waiting...");
 
-        return null;
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            System.out.println("...login finished waiting");
+        }
+
+        return user;
+    }
+
+    public void setUser(User user){
+        synchronized (this) {
+            this.user = user;
+            if (user == null) {
+                System.out.println("user is null");
+            }
+            notify();
+        }
+    }
+
+    //---------Postcodes----------------------------
+    public void updateInfo(List<Dish> dishes, List<Postcode> postcodes) {
+        synchronized (this) {
+            this.dishes = dishes;
+            this.postcodes = postcodes;
+            notify();
+        }
     }
 
     @Override
     public List<Postcode> getPostcodes() {
+        for(Postcode postcode : postcodes){
+            System.out.println(postcode.getName());
+        }
         return postcodes;
     }
 
+    //-------------Dishes--------------------------------
     @Override
     public List<Dish> getDishes() {
         return dishes;
@@ -115,9 +161,9 @@ public class Client implements ClientInterface {
 
     @Override
     public Number getBasketCost(User user) {
-        Double total = 0.0;
+        Integer total = 0;
         for(Dish dish : basket.keySet()){
-            total+=(dish.getPrice() * (Integer)basket.get(dish));
+            total+=(dish.getPrice() * basket.get(dish).intValue());
         }
         return total;
     }
@@ -134,16 +180,10 @@ public class Client implements ClientInterface {
 
     @Override
     public Order checkoutBasket(User user) {
-        Order order = new Order(user, basket);
-        orders.add(order);
-        send(new Payload(order, TransactionType.requestPurchase));
-
-        //this then needs to lock until notified
-        //the server will reply
-        //reply will be handled and user updated
-        //then return current user
-
-        return null;
+        Order newOrder = new Order(user, basket);
+        orders.add(newOrder);
+        send(new Payload(newOrder, TransactionType.requestOrder));
+        return newOrder;
     }
 
     @Override
@@ -176,6 +216,8 @@ public class Client implements ClientInterface {
         send(new Payload(order, TransactionType.requestCancel));
         orders.remove(order);
     }
+
+    //----------updates-----------------------------
 
     @Override
     public void addUpdateListener(UpdateListener listener) {

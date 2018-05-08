@@ -1,11 +1,8 @@
 package server;
 
-import common.Postcode;
 import common.User;
 
 import java.util.HashMap;
-//user postcode class?
-//use hashcode
 //write to file?
 
 public class Authenticate {
@@ -18,31 +15,26 @@ public class Authenticate {
     }
 
     public User login(String username, String password){
-        if(!checkExists(username))
+        if(!checkExists(username)) {
+            System.out.println("doesn't exist");
             return null;
-        else
-            return users.get(username);
-    }
-
-    public boolean register(String username, String password, Postcode postcode, String address){
-        if (!checkExists(username))
-            return false;
-        else {
-            //new postcode?
-            users.put(username, new User(username, password, address, postcode));
-            return true;
+        } else {
+            User currentUser = users.get(username);
+            if (currentUser.getPassword().equals(password)){
+                return currentUser;
+            } else {
+                return null;
+            }
         }
-
     }
 
-    public boolean register(String username, User user ){
-        if (!checkExists(username))
-            return false;
+    public User register(String username, User user ){
+        if (checkExists(username))
+            return null;
         else {
             users.put(username, user);
-            return true;
+            return user;
         }
-
     }
 
     public void removeUser(String username){

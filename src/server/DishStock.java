@@ -1,5 +1,6 @@
 package server;
 import common.Dish;
+import common.Order;
 
 
 import java.util.*;
@@ -19,10 +20,8 @@ public class DishStock implements Runnable{
 
     @Override
     public void run() {
-        //initial check
-        //check again after request
-        //only check thouse changed in future???
-        checkStock();
+//        System.out.println("IS started");
+//        checkStock();
     }
 
     public void addStock(Dish dish, Integer amount){
@@ -33,16 +32,31 @@ public class DishStock implements Runnable{
         }
     }
 
-    public Dish takeStock(Dish dish, Integer quantity){
-        if ((Integer)stock.get(dish)-quantity > 0) {
-            stock.put(dish, (Integer)stock.get(dish) - quantity);
-            checkStock();
-            return dish;
+    public boolean takeStock(Order order){
+        boolean canMake = true;
+        //for number of dishes in order,
+        //if there aren't enough dishes, add them to restock
+        for(Dish dish : order.getDishes()){
+            //if ((stock.get(dish).intValue()-order.getDishQuantity(dish.getName()) < 0)) {
+            if ((stock.get(dish).intValue() -  order.geetDishQuantity(dish) < 0)) {
+                addToRestockQueue(dish, 1);
+                canMake = false;
+            }
+        }
+
+        if (!canMake){
+            return false;
         } else {
-            return null;
+            for (Dish dish : order.getDishes()) {
+                //removes dishes from stock
+                //stock.put(dish, stock.get(dish).intValue() - order.getDishQuantity(dish).intValue());
+                stock.put(dish, stock.get(dish).intValue() - order.geetDishQuantity(dish));
+
+            }
+            checkStock();
+            return true;
         }
     }
-
 
     public void addToRestockQueue(Dish dish, Integer amount){
         for(int i = 0; i < amount; i++) {
@@ -88,4 +102,5 @@ public class DishStock implements Runnable{
     public Map<Dish, Number> getStockLevels() {
         return stock;
     }
+
 }

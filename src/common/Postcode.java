@@ -1,12 +1,15 @@
 package common;
 
-public class Postcode extends Model {
+import java.io.Serializable;
+
+public class Postcode extends Model implements Serializable {
     private String code;
     private Integer distance;
 
     public Postcode(String code, Integer distance){
         this.distance = distance;
         this.code = code;
+        setName(code);
     }
 
     public String getPostcode() {
@@ -15,10 +18,10 @@ public class Postcode extends Model {
 
     @Override
     public String getName() {
-        return code;
+        return name;
     }
 
     public Integer getDistance() {
-        return distance;
+        return distance; //You can assume a fixed distance for each customer postcode?
     }
 }

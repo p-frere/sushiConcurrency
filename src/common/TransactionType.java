@@ -1,12 +1,16 @@
 package common;
 
 public enum TransactionType {
-    requetLogin,
+    //client sends - server receives
+    requestLogin,
     requestCancel,
-    requestPurchase,
+    requestOrder,
     requestRegister,
 
+    //sever sends - client receives
     replyLogin,
     replyOrder,
-    replyStock
+    updateInfo,
+    deliverOrder,
+    updateStatus
 }

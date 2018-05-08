@@ -1,6 +1,7 @@
 package common;
 
 import server.Server;
+import common.Dish;
 
 import java.util.*;
 
@@ -13,19 +14,21 @@ public class Order extends Model {
 
     private User user;
     private OrderStatus status;
-    private Map<Dish, Number> basket;
+    public Map<Dish, Number> basket;
 
     public Order(User customer, Map<Dish, Number> basket) {
         this.user = customer;
         this.basket = basket;
+        setName(user.getUserName()+" Order");
         status = OrderStatus.PENDING;
     }
 
     @Override
     public String getName() {
-        return "New Order";
+        return name;
     }
 
+    //turns the map into a list of
     public List<Dish> listItems(){
         List<Dish> list = new ArrayList<>();
         Iterator it = basket.entrySet().iterator();
@@ -40,6 +43,19 @@ public class Order extends Model {
         return list;
     }
 
+    public User getUser() {
+        return user;
+    }
+
+    public Set<Dish> getDishes(){
+        return basket.keySet();
+    }
+
+    //get dish quantilty
+    public Integer geetDishQuantity(Dish dish){
+        return basket.get(dish).intValue();
+    }
+
     public OrderStatus getStatus() {
         return status;
     }
@@ -50,10 +66,6 @@ public class Order extends Model {
 
     public Integer getOrderCost(){
         Integer total = 0;
-//        for (Dish dish : basket.keySet()){
-//            //System.out.println(dish.getPrice());
-//            total+=(5*(Integer) basket.get(dish));
-//        }
         Iterator it = basket.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry)it.next();

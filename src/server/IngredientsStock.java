@@ -6,6 +6,10 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+/**
+ * Stores and manages all the ingredients
+ * It maintains info on the stock and a queue of ingredients needed that drones can query
+ */
 public class IngredientsStock implements Runnable{
     private Map<Ingredient, Number> stock;
     private Queue<Ingredient> restockQueue;
@@ -19,13 +23,15 @@ public class IngredientsStock implements Runnable{
 
     @Override
     public void run() {
-        //initial check
-        //check again after request
-        //only check thouse changed in future???
+        System.out.println("IS started");
         checkStock();
-
     }
 
+    /**
+     * Adds ingredients to the stock
+     * @param ingredient
+     * @param amount
+     */
     public void addStock(Ingredient ingredient, Integer amount){
         if(stock.containsKey(ingredient)) {
             stock.put(ingredient, (Integer) stock.get(ingredient) + amount);
@@ -34,12 +40,16 @@ public class IngredientsStock implements Runnable{
         }
     }
 
+    /**
+     *
+     * @param dish
+     * @return
+     */
     public boolean takeStock(Dish dish){
-        //checks if makable
+        //checks if enough ingredients
        Iterator it = dish.getRecipe().entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry)it.next();
-            //System.out.println(pair.getKey() + " = " + pair.getValue());
             Ingredient ingredient = (Ingredient) pair.getKey();
             Integer amount = (Integer)pair.getValue();
 
@@ -47,7 +57,8 @@ public class IngredientsStock implements Runnable{
                 return false;
             }
         }
-        //and remove ingrients
+
+        //if enough, remove ingredients as they will be used in a dish
         it = dish.getRecipe().entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry)it.next();
@@ -55,14 +66,17 @@ public class IngredientsStock implements Runnable{
             Integer amount = (Integer) pair.getValue();
             stock.put(ingredient, (Integer)stock.get(ingredient)-amount);
         }
+
+        //check stock levels
         checkStock();
         return true;
     }
 
     public void addToRestockQueue(Ingredient item, Integer amount){
-        for(int i = 0; i < amount; i++) {
-            restockQueue.add(item);
-        }
+//        for(int i = 0; i < amount; i++) {
+//            restockQueue.add(item);
+//        }
+        restockQueue.add(item);
     }
 
     public Ingredient getFromRestockQueue(){

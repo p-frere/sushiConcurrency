@@ -2,6 +2,8 @@ package client;
 
 import common.Payload;
 import common.TransactionType;
+import common.Update;
+import common.User;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -10,6 +12,11 @@ import java.net.Socket;
 import java.util.Scanner;
 
 public class ClientComms implements Runnable{
+    Client client;
+
+    public ClientComms(Client client){
+        this.client = client;
+    }
 
     @Override
     public void run() {
@@ -33,7 +40,23 @@ public class ClientComms implements Runnable{
     }
 
     public void doSomething(Payload payload){
+        System.out.println("received payload");
 
+        switch (payload.getTransactionType()){
+            case updateInfo:
+                Update update = (Update) payload.getObject();
+                client.updateInfo(update.getDishes(), update.getPostcodes());
+                break;
+            case replyLogin:
+                client.setUser((User) payload.getObject());
+                break;
+            case requestRegister:
+                client.setUser((User) payload.getObject());
+                break;
+            default:
+                System.out.println("unknown request");
+                break;
+        }
     }
 
 }

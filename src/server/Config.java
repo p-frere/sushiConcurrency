@@ -3,11 +3,13 @@ package server;
 
 import common.Dish;
 import common.Ingredient;
+import common.Order;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Config {
     private Server server;
@@ -22,7 +24,7 @@ public class Config {
             String line;
             while ((line = br.readLine()) != null) {
                 String[] content = line.split(":");
-                System.out.println(content[0]);
+                //System.out.println(content[0]);
                 processLine(content);
             }
             br.close();
@@ -70,11 +72,11 @@ public class Config {
                     String[] splitItems = item.split(" \\* ");
                     basket.put(server.getDish(splitItems[1]), Integer.valueOf(splitItems[0]));
                 }
-                server.addOrder(server.getUSer(words[1]),basket);
+                server.addOrder(new Order(server.getUSer(words[1]),basket));
                 break;
 
             case "STOCK":
-                System.out.println(words[1]);
+                //System.out.println(words[1]);
                 if(server.getDish(words[1]) != null)
                     server.setStock(server.getDish(words[1]), Integer.valueOf(words[2]));
                 else
@@ -90,7 +92,7 @@ public class Config {
                 break;
 
             default:
-                System.out.println("line no recognized");
+                //System.out.println("line no recognized");
                 break;
         }
     }

@@ -1,8 +1,9 @@
 package common;
 
+import java.io.Serializable;
 import java.util.Map;
 
-public class Ingredient extends Model {
+public class Ingredient extends Model implements Serializable{
     //model gives it name
     private String unit;
     private Supplier supplier;
@@ -10,7 +11,7 @@ public class Ingredient extends Model {
     Integer restockAmount;
 
     public Ingredient(String name, String unit, Supplier supplier, Integer restockThreshold, Integer restockAmount){
-        this.name = name;
+        setName(name);
         this.unit = unit;
         this.supplier = supplier;
         this.restockAmount = restockAmount;

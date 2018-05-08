@@ -224,7 +224,8 @@ public class ServerWindow extends JFrame implements UpdateListener {
 		
 		//Suppliers Panel
 		supplierPanel.add.addActionListener(e -> {
-				String name = (String) ingredientPanel.get("Name");
+				//TODO changed ingredientPanel tp  supplierPanel here
+				String name = (String) supplierPanel.get("Name");
 				Number distance = (Number) supplierPanel.get("Distance");
 				server.addSupplier(name,distance);
 				supplierPanel.reset();

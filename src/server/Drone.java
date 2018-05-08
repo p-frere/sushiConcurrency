@@ -2,46 +2,73 @@ package server;
 
 import common.*;
 
+/**
+A drone monitors stock levels of ingredients.
+When these drop below their restocking levels,
+it collects further ingredients from the appropriate supplier.
+The time it takes for this dependa on its speed and the distance to the supplier.
+When it is not collecting stocks, a drone can also deliver customer orders.
+ */
 public class Drone extends Model implements Runnable {
     private Integer speed;
     private DroneStatus status;
     private IngredientsStock ingredientsStock;
-    private DishStock dishStock;
+    private OrderManager orderManager;
+    private Server server;
 
-    public Drone(Integer speed){
+    public Drone(Integer speed, Server server){
         this.speed = speed;
         status = DroneStatus.IDLE;
-        name = "droneSpeed"+speed;
+        setName("droneSpeed"+speed);
+        ingredientsStock = server.getIngredientsStock();
+        orderManager =  server.getOrderManager();
     }
 
     @Override
     public void run() {
-//        while (true) { //forever
+        System.out.println(name + " started");
+        while (true) {
+//            Order order = orderManager.takeOrder();
+//            //if no dishes are in queue try again
+//            if (order != null) {
+//                deliver(order, order.getUser());
 //
-//        }
+//            }
+
+            Ingredient ingredient = ingredientsStock.getFromRestockQueue();
+            if (ingredient != null){
+                recover(ingredient);
+            }
+
+        }
     }
 
     //recover ingredients from supplier
     public void recover(Ingredient ingredient){
+        System.out.println(name + " recovering " + ingredient.getName());
         status = DroneStatus.RECOVERING;
+        System.out.println(getName() + "flying out");
         try {
-            Thread.sleep((long)(ingredient.getSupplier().getDistance() / speed)); //Milliseconds??
+            Thread.sleep((long)(ingredient.getSupplier().getDistance() / speed) * 2);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        System.out.println(getName() + "flying in");
+        ingredientsStock.addStock(ingredient, ingredient.getRestockAmount());
         status = DroneStatus.IDLE;
     }
 
     //delivers dish to users
-    public void deliver(Dish dish, User user) { //user?
+    public void deliver(Order order, User user) {
         status = DroneStatus.DELIVERING;
         try {
-            Thread.sleep(2000); //how long?
-            //todo talk to clint?
+            //"You can assume a fixed distance for each customer postcode"
+            Thread.sleep((user.getPostCode().getDistance() / speed) * 2); //how long?
         } catch (InterruptedException e) {
             System.out.println("errors when deliver sleeping");
         }
         status = DroneStatus.IDLE;
+        //todo server.send
     }
 
     //setta and getta
@@ -59,22 +86,3 @@ public class Drone extends Model implements Runnable {
     }
 }
 
-/*
-A drone should monitor stock levels of ingredients.
-When these drop below their restocking levels,
-it should collect further ingredients from the appropriate supplier.
-The time it will take for this will depend on its speed and the distance to the supplier.
-
-When it is not collecting stocks, a drone can also deliver customer orders.
-You can assume a fixed distance for each customer postcode,
-and along with the speed of the drone, this will determine the delivery time.
-
-Again, ensure your classes are appropriately synchronized,
-so that multiple drones can run concurrently.
-
-A drone should be able to return a text status which indicates its current job.
-If the drone is performing no action, this should simply return "Idle".
-
-
-
- */
