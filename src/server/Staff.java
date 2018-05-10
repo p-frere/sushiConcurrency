@@ -1,4 +1,6 @@
 package server;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import common.*;
 
@@ -7,7 +9,6 @@ public class Staff extends Model implements Runnable {
     private Server server;
     private DishStock dishStock;
     private IngredientsStock ingredientsStock;
-    private String name;
 
     public Staff(String name, Server server){
         setName(name);
@@ -20,30 +21,51 @@ public class Staff extends Model implements Runnable {
     @Override
     public void run() {
 
-//        while (true) { //forever, for the works are slaves and get not holidays
-//            Dish dish = dishStock.getFromRestockQueue();
-//            //if no dishes are in queue try again
-//            if (dish != null) {
-//                if(ingredientsStock.takeStock(dish)){  //should also remove stock if true
-//                    getCookin(dish);
-//                }else {
-//                    return;
-//                }
-//            }
-//        }
+        while (true) { //forever, for the works are slaves and get not holidays
+            //Dish dish = dishStock.peekAtRestock();
+            //if no dishes are in queue try again
 
+            Dish dish = dishStock.takeFromRestockQueue();
+            if (dish != null) {
+                System.out.println(getName() + "is collecting for " + dish.getName());
+
+                boolean dishMade = false;
+                Map<Ingredient, Number> recipe = new HashMap<>(dish.getRecipe()); //remove to partial work
+                Map<Ingredient, Number> obtained = new HashMap<>(dish.getRecipe());
+                for(Ingredient ingredient : obtained.keySet()){
+                    obtained.put(ingredient, 0);
+                }
+
+                while (!dishMade) {
+                    for(Ingredient ingredient : obtained.keySet()){
+                        if(recipe.get(ingredient).intValue() > obtained.get(ingredient).intValue()){
+                            if (ingredientsStock.takeStock(ingredient)){
+                                obtained.put(ingredient, obtained.get(ingredient).intValue()+1);
+                            }
+                        }
+                    }
+
+                    if(recipe.equals(obtained)){
+                        getCookin(dish);
+                        dishMade = true;
+                    }
+                }
+            }
+        }
     }
 
     public void getCookin(Dish dish) {
         status = StaffStatus.COOKING;
         Random rand = new Random();
         try {
-            Thread.sleep((rand.nextInt(40)+20)*10); // Simulates the time to prepare
-            dishStock.addStock(dish, 1);
+            System.out.println(getName() + ": cooking");
+            Thread.sleep((rand.nextInt(40)+20)*100); // Simulates the time to prepare
+            dishStock.addStock(dish, 10);
 
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        System.out.println(getName() + ": finished");
         status = StaffStatus.IDLE;
     }
 

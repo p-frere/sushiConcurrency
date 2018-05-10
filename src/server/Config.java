@@ -76,7 +76,7 @@ public class Config {
                 break;
 
             case "STOCK":
-                //System.out.println(words[1]);
+                //System.out.println("stock");
                 if(server.getDish(words[1]) != null)
                     server.setStock(server.getDish(words[1]), Integer.valueOf(words[2]));
                 else
@@ -84,10 +84,12 @@ public class Config {
                 break;
 
             case "STAFF":
+                //System.out.println("staff");
                 server.addStaff(words[1]);
                 break;
 
             case "DRONE":
+                //System.out.println("drone");
                 server.addDrone(Integer.valueOf(words[1]));
                 break;
 

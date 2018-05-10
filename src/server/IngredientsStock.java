@@ -1,10 +1,9 @@
 package server;
-import common.Dish;
 import common.Ingredient;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
+
 
 /**
  * Stores and manages all the ingredients
@@ -12,19 +11,21 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class IngredientsStock implements Runnable{
     private Map<Ingredient, Number> stock;
-    private Queue<Ingredient> restockQueue;
+    private Set<Ingredient> restock;
     private Server server;
 
     public IngredientsStock(Server server){
         stock = new ConcurrentHashMap<>();
-        restockQueue = new ConcurrentLinkedQueue<>();
+        restock = new HashSet<>();
         this.server = server;
+
     }
 
     @Override
     public void run() {
-        System.out.println("IS started");
-        checkStock();
+        while(true) {
+            checkStock();
+        }
     }
 
     /**
@@ -32,7 +33,8 @@ public class IngredientsStock implements Runnable{
      * @param ingredient
      * @param amount
      */
-    public void addStock(Ingredient ingredient, Integer amount){
+    public synchronized void addStock(Ingredient ingredient, Integer amount){
+        //System.out.println(ingredient.getName() + " x 10 added to stock");
         if(stock.containsKey(ingredient)) {
             stock.put(ingredient, (Integer) stock.get(ingredient) + amount);
         }else {
@@ -40,81 +42,57 @@ public class IngredientsStock implements Runnable{
         }
     }
 
-    /**
-     *
-     * @param dish
-     * @return
-     */
-    public boolean takeStock(Dish dish){
-        //checks if enough ingredients
-       Iterator it = dish.getRecipe().entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry pair = (Map.Entry)it.next();
-            Ingredient ingredient = (Ingredient) pair.getKey();
-            Integer amount = (Integer)pair.getValue();
 
-            if (amount > (Integer) stock.get(ingredient)){
-                return false;
+    public synchronized boolean takeStock(Ingredient ingredient){
+        if(stock.get(ingredient).intValue() > 0) {
+            stock.put(ingredient, stock.get(ingredient).intValue() - 1); //takes ingredient
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
+        //checks if restock is needed
+    public synchronized void checkStock(){
+        Iterator it = stock.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<Ingredient, Integer> pair = (Map.Entry)it.next();
+            Ingredient ingredient = pair.getKey();
+            Integer amount = pair.getValue();
+            if(amount < ingredient.getRestockThreshold()){
+                addToRestockQueue(ingredient);
             }
         }
-
-        //if enough, remove ingredients as they will be used in a dish
-        it = dish.getRecipe().entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry pair = (Map.Entry)it.next();
-            Ingredient ingredient = (Ingredient) pair.getKey();
-            Integer amount = (Integer) pair.getValue();
-            stock.put(ingredient, (Integer)stock.get(ingredient)-amount);
-        }
-
-        //check stock levels
-        checkStock();
-        return true;
     }
 
-    public void addToRestockQueue(Ingredient item, Integer amount){
-//        for(int i = 0; i < amount; i++) {
-//            restockQueue.add(item);
-//        }
-        restockQueue.add(item);
+    public synchronized void addToRestockQueue(Ingredient item){
+        restock.add(item);
     }
 
-    public Ingredient getFromRestockQueue(){
-        if(!restockQueue.isEmpty()){
-            return restockQueue.poll();
+    public synchronized Ingredient takeFromRestockQueue(){
+        if(!restock.isEmpty()){
+            Iterator iter = restock.iterator();
+            Ingredient ingredient = (Ingredient)iter.next();
+            iter.remove();
+            return ingredient;
         } else {
             return null;
         }
     }
 
-    //checks if restock is needed
-    public void checkStock(){
-        Iterator it = stock.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry<Ingredient, Integer> pair = (Map.Entry)it.next();
-            Ingredient ingredient = (Ingredient) pair.getKey();
-            Integer amount = (Integer) pair.getValue();
-            if(amount < ingredient.getRestockThreshold()){
-                addToRestockQueue(ingredient, ingredient.getRestockThreshold()-amount);
-            }
-        }
-    }
-
-
-    public void removeStock(Ingredient ingredient){
+    public synchronized void removeStock(Ingredient ingredient){
         stock.remove(ingredient);
         //todo unable to delete exception
     }
 
-    public List<Ingredient> getIngredients(){
+    public synchronized List<Ingredient> getIngredients(){
         List<Ingredient> list = new ArrayList<>();
-        for (Ingredient item : stock.keySet()){
-            list.add(item);
-        }
+        list.addAll(stock.keySet());
         return list;
     }
 
-    public Map<Ingredient, Number> getStockLevels(){
+    public synchronized Map<Ingredient, Number> getStockLevels(){
         return stock;
     }
 

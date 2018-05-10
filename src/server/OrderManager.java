@@ -1,7 +1,10 @@
 package server;
+import common.Dish;
 import common.Order;
+import common.OrderStatus;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -12,19 +15,16 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class OrderManager implements Runnable{
     private Queue<Order> incomingOrders;    //orders that need (need to produced)
     private Queue<Order> outgoingOrders;    //orders that we have (need to be droned out)
-    private DishStock dishStock;
     private Server server;
 
     public OrderManager(Server server){
         incomingOrders =  new ConcurrentLinkedQueue<>();
         outgoingOrders = new ConcurrentLinkedQueue<>();
         this.server = server;
-        dishStock = server.getDishStock();
     }
 
     @Override
     public void run() {
-        //requestDishes();
     }
 
     /**
@@ -33,7 +33,12 @@ public class OrderManager implements Runnable{
      */
     public void addOrder(Order order){
         incomingOrders.add(order);
-        requestDishes();
+        System.out.println("order added");
+    }
+
+    public void completeOrder(Order order){
+        outgoingOrders.add(order);
+        order.setStatus(OrderStatus.COMPLETE);
     }
 
     /**
@@ -45,25 +50,15 @@ public class OrderManager implements Runnable{
         if(outgoingOrders.isEmpty()){
             return null;
         } else {
-            return outgoingOrders.peek();
+            return outgoingOrders.poll();
         }
     }
 
-    /**
-     * Requests the the first order in incoming Orders
-     * if the required dishes are present it puts them in outgoing orders
-     */
-    private void requestDishes(){
-        Order order = incomingOrders.peek();
-        if (order ==null){
-            return;
-        }
-
-        if (dishStock.takeStock(order)) {
-            outgoingOrders.add(incomingOrders.poll());
-            requestDishes();
+    public Order takeFromIncomingOrders(){
+        if(!incomingOrders.isEmpty()){
+            return incomingOrders.poll();
         } else {
-            return;
+            return null;
         }
     }
 

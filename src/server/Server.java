@@ -53,7 +53,7 @@ public class Server implements ServerInterface {
 
         dishStock = new DishStock(this);
         ingredientsStock = new IngredientsStock(this);
-        //orderManager = new OrderManager(this);
+        orderManager = new OrderManager(this);
 
 
         //import settings for testing
@@ -68,16 +68,25 @@ public class Server implements ServerInterface {
         userThreads = new ArrayList<>();
         initSocket();
 
-//        Thread isThrd = new Thread(ingredientsStock);
-//        isThrd.start();
-//
-//        for (Drone drone : drones){
-//            new Thread(drone).start();
-//        }
-//        Thread dsThrd = new Thread(dishStock);
-//        dsThrd.start();
-//        Thread omThrd = new Thread(orderManager);
-//        omThrd.start();
+        Thread isThrd = new Thread(ingredientsStock);
+        isThrd.start();
+
+        for (Drone drone : drones){
+            new Thread(drone).start();
+        }
+        Thread dsThrd = new Thread(dishStock);
+        dsThrd.start();
+
+        for (Staff staff : staffs){
+            new Thread(staff).start();
+        }
+
+        Thread omThrd = new Thread(orderManager);
+        omThrd.start();
+
+        new Thread(new OrderBuilder(this)).start();
+
+
     }
 
 
@@ -319,9 +328,6 @@ public class Server implements ServerInterface {
     @Override
     public void removeDrone(Drone drone) throws UnableToDeleteException {
         drones.remove(drone);
-        //will this actully work?
-        //do we need to specifiy speed?
-        //is it a genral drone
     }
 
     @Override

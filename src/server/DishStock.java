@@ -1,27 +1,25 @@
 package server;
 import common.Dish;
-import common.Order;
-
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class DishStock implements Runnable{
     private Map<Dish, Number> stock;
-    private Queue<Dish> restockQueue;
+    private Set<Dish> restock;
     private Server server;
 
     public DishStock(Server server){
         this.server = server;
         stock = new ConcurrentHashMap<>();              //lists stocks of dishes
-        restockQueue = new ConcurrentLinkedQueue<>();  //list of dishes that need to be made
+        restock = new HashSet<>();
     }
 
     @Override
     public void run() {
-//        System.out.println("IS started");
-//        checkStock();
+        while (true) {
+            checkStock();
+        }
     }
 
     public void addStock(Dish dish, Integer amount){
@@ -32,43 +30,12 @@ public class DishStock implements Runnable{
         }
     }
 
-    public boolean takeStock(Order order){
-        boolean canMake = true;
-        //for number of dishes in order,
-        //if there aren't enough dishes, add them to restock
-        for(Dish dish : order.getDishes()){
-            //if ((stock.get(dish).intValue()-order.getDishQuantity(dish.getName()) < 0)) {
-            if ((stock.get(dish).intValue() -  order.geetDishQuantity(dish) < 0)) {
-                addToRestockQueue(dish, 1);
-                canMake = false;
-            }
-        }
-
-        if (!canMake){
-            return false;
-        } else {
-            for (Dish dish : order.getDishes()) {
-                //removes dishes from stock
-                //stock.put(dish, stock.get(dish).intValue() - order.getDishQuantity(dish).intValue());
-                stock.put(dish, stock.get(dish).intValue() - order.geetDishQuantity(dish));
-
-            }
-            checkStock();
+    public boolean takeStock(Dish dish){
+        if(stock.get(dish).intValue() > 0) {
+            stock.put(dish, stock.get(dish).intValue() - 1); //takes ingredient
             return true;
-        }
-    }
-
-    public void addToRestockQueue(Dish dish, Integer amount){
-        for(int i = 0; i < amount; i++) {
-            restockQueue.add(dish);
-        }
-    }
-
-    public Dish getFromRestockQueue(){
-        if(!restockQueue.isEmpty()){
-            return restockQueue.poll();
         } else {
-            return null;
+            return false;
         }
     }
 
@@ -77,13 +44,32 @@ public class DishStock implements Runnable{
         Iterator it = stock.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<Dish, Integer> pair = (Map.Entry)it.next();
-            Dish dish = (Dish) pair.getKey();
-            Integer amount = (Integer) pair.getValue();
+            Dish dish = pair.getKey();
+            Integer amount = pair.getValue();
             if(amount < dish.getRestockThreshold()){
-                addToRestockQueue(dish, dish.getRestockThreshold()-amount);
+                addToRestockQueue(dish);
             }
         }
     }
+
+
+    public synchronized void addToRestockQueue(Dish dish){
+        restock.add(dish);
+
+    }
+
+
+    public synchronized Dish takeFromRestockQueue(){
+        if(!restock.isEmpty()){
+            Iterator iter = restock.iterator();
+            Dish dish = (Dish) iter.next();
+            iter.remove();
+            return dish;
+        } else {
+            return null;
+        }
+    }
+
 
     public void removeStock(Dish dish){
         stock.remove(dish);

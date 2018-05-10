@@ -26,7 +26,6 @@ public class Drone extends Model implements Runnable {
 
     @Override
     public void run() {
-        System.out.println(name + " started");
         while (true) {
 //            Order order = orderManager.takeOrder();
 //            //if no dishes are in queue try again
@@ -35,7 +34,7 @@ public class Drone extends Model implements Runnable {
 //
 //            }
 
-            Ingredient ingredient = ingredientsStock.getFromRestockQueue();
+            Ingredient ingredient = ingredientsStock.takeFromRestockQueue();
             if (ingredient != null){
                 recover(ingredient);
             }
@@ -45,15 +44,13 @@ public class Drone extends Model implements Runnable {
 
     //recover ingredients from supplier
     public void recover(Ingredient ingredient){
-        System.out.println(name + " recovering " + ingredient.getName());
+        //System.out.println(name + " recovering " + ingredient.getName());
         status = DroneStatus.RECOVERING;
-        System.out.println(getName() + "flying out");
         try {
-            Thread.sleep((long)(ingredient.getSupplier().getDistance() / speed) * 2);
+            Thread.sleep((long)(ingredient.getSupplier().getDistance() / speed) * 1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        System.out.println(getName() + "flying in");
         ingredientsStock.addStock(ingredient, ingredient.getRestockAmount());
         status = DroneStatus.IDLE;
     }

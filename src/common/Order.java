@@ -76,6 +76,13 @@ public class Order extends Model {
         return total;
     }
 
+    public Map<Dish, Number> getBasket() {
+        return basket;
+    }
+
+    public void setStatus(OrderStatus status) {
+        this.status = status;
+    }
     //Think of an order as something a drone will carry out
     // so it has a list of dishes
     // with corresponding quantities
