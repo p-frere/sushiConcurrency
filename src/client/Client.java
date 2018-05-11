@@ -41,8 +41,10 @@ public class Client implements ClientInterface {
             }
         }
 
+        for(Postcode postcode : postcodes)
+            System.out.println(postcode.getName());
         window = new ClientWindow(this);
-        getPostcodes();
+
 
     }
 
@@ -132,9 +134,6 @@ public class Client implements ClientInterface {
 
     @Override
     public List<Postcode> getPostcodes() {
-        for(Postcode postcode : postcodes){
-            System.out.println(postcode.getName());
-        }
         return postcodes;
     }
 

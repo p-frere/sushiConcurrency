@@ -22,12 +22,10 @@ public class Staff extends Model implements Runnable {
     public void run() {
 
         while (true) { //forever, for the works are slaves and get not holidays
-            //Dish dish = dishStock.peekAtRestock();
-            //if no dishes are in queue try again
 
             Dish dish = dishStock.takeFromRestockQueue();
             if (dish != null) {
-                System.out.println(getName() + "is collecting for " + dish.getName());
+                //System.out.println(getName() + "is collecting for " + dish.getName());
 
                 boolean dishMade = false;
                 Map<Ingredient, Number> recipe = new HashMap<>(dish.getRecipe()); //remove to partial work

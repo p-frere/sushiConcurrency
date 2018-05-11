@@ -10,7 +10,7 @@ public class Dish extends Model implements Serializable{
     public Map<Ingredient, Number> recipe;
     private Integer restockThreshold;
     private Integer restockAmount;
-    private boolean requested;
+    private boolean fetching;
 
     public Dish(String name, String description, Integer price, Integer restockThreshold, Integer restockAmount){
         setName(name);
@@ -63,11 +63,11 @@ public class Dish extends Model implements Serializable{
         return restockAmount;
     }
 
-    public boolean isRequested() {
-        return requested;
+    public boolean isFetching() {
+        return fetching;
     }
 
-    public void setRequested(boolean requested) {
-        this.requested = requested;
+    public void setFetching(boolean requested) {
+        this.fetching = requested;
     }
 }

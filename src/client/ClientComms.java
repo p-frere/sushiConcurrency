@@ -1,9 +1,6 @@
 package client;
 
-import common.Payload;
-import common.TransactionType;
-import common.Update;
-import common.User;
+import common.*;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -52,6 +49,16 @@ public class ClientComms implements Runnable{
                 break;
             case requestRegister:
                 client.setUser((User) payload.getObject());
+                break;
+            case deliverOrder:
+                System.out.println("recived order captin ;)7");
+                Order incomingOrder =(Order) payload.getObject();
+                for(Order order : client.getOrders(incomingOrder.getUser())){
+                    if(order.getBasket().equals(incomingOrder.getBasket())){
+                        order.setStatus(OrderStatus.COMPLETE);
+                    }
+                }
+
                 break;
             default:
                 System.out.println("unknown request");

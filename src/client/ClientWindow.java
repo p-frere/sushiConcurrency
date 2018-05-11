@@ -580,7 +580,9 @@ public class ClientWindow extends JFrame implements UpdateListener {
 				
 				JLabel locationLabel = new JLabel("Locations");
 				location = new JComboBox<Postcode>();
+
 				location.setModel(new ComboModel<Postcode>(() -> client.getPostcodes()));
+
 				if(location.getModel().getSize() > 0) {
 					location.setSelectedIndex(0);
 				}
@@ -618,16 +620,12 @@ public class ClientWindow extends JFrame implements UpdateListener {
 
 				@Override
 				public int getSize() {
-					//TODO changed
-					return 0;
-					//return dataSource.get().size();
+					return dataSource.get().size();
 				}
 
 				@Override
 				public T getElementAt(int index) {
-					//TODO changed
-					return null;
-					//return (T) dataSource.get().get(index);
+					return (T) dataSource.get().get(index);
 				}
 
 				@Override

@@ -40,6 +40,8 @@ public class IngredientsStock implements Runnable{
         }else {
             stock.put(ingredient, amount);
         }
+        restock.remove(ingredient);
+        ingredient.setFetching(false);
     }
 
 
@@ -70,16 +72,31 @@ public class IngredientsStock implements Runnable{
         restock.add(item);
     }
 
+//    public synchronized Ingredient takeFromRestockQueue(){
+//        if(!restock.isEmpty()){
+//            Iterator iter = restock.iterator();
+//            Ingredient ingredient = (Ingredient)iter.next();
+//            iter.remove();
+//            return ingredient;
+//        } else {
+//            return null;
+//        }
+//    }
+
     public synchronized Ingredient takeFromRestockQueue(){
-        if(!restock.isEmpty()){
-            Iterator iter = restock.iterator();
-            Ingredient ingredient = (Ingredient)iter.next();
-            iter.remove();
-            return ingredient;
-        } else {
-            return null;
+        Iterator iter = restock.iterator();
+        Ingredient ingredient;
+        while (iter.hasNext()){
+            ingredient = (Ingredient)iter.next();
+            if (!ingredient.isFetching()){
+                //if it hasn't been fetched yet
+                return ingredient;
+            }
         }
+        //nothing to be taken atm
+        return null;
     }
+
 
     public synchronized void removeStock(Ingredient ingredient){
         stock.remove(ingredient);
@@ -97,26 +114,3 @@ public class IngredientsStock implements Runnable{
     }
 
 }
-
-/*
-public synchronized Stock getStock() {
-		return stock;
-	}
-
-	public void setStock(Stock stock) {
-		this.stock = stock;
-	}
- */
-
-
-/*
-
-Write appropriate classes to keep track of ingredients and prepared dishes that are currently held in stock by the business.
-
-For each ingredient and dish, there should be a restocking threshold (at which restocking occurs)
-and a restocking amount.
-
- Falling below this level means that new ingredients should be ordered or new dishes should be prepared
-
-
- */

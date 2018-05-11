@@ -9,7 +9,7 @@ public class Ingredient extends Model implements Serializable{
     private Supplier supplier;
     Integer restockThreshold;
     Integer restockAmount;
-    private boolean requested;
+    private boolean fetching;
 
     public Ingredient(String name, String unit, Supplier supplier, Integer restockThreshold, Integer restockAmount){
         setName(name);
@@ -17,7 +17,7 @@ public class Ingredient extends Model implements Serializable{
         this.supplier = supplier;
         this.restockAmount = restockAmount;
         this.restockThreshold = restockThreshold;
-        requested = false;
+        fetching = false;
     }
 
 
@@ -48,11 +48,11 @@ public class Ingredient extends Model implements Serializable{
         return restockAmount;
     }
 
-    public boolean isRequested(){
-        return requested;
+    public boolean isFetching(){
+        return fetching;
     }
 
-    public void setRequested(boolean requested) {
-        this.requested = requested;
+    public void setFetching(boolean requested) {
+        this.fetching = requested;
     }
 }

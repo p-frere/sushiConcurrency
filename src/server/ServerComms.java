@@ -10,18 +10,22 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-// Assigns thread to each connected client
-//sends messages out
-//listens for input from socket
-public class ServerComms extends Thread {
-    Socket socket = null;
-    ObjectInputStream objectInputStream;
-    ObjectOutputStream objectOutputStream;
-    Server server;
 
-    public ServerComms(Socket socket, Server server) throws ClassNotFoundException {
+
+/**
+ *  A thread that handles the sending and receiving of messages to a client
+ */
+public class ServerComms extends Thread {
+    private Socket socket = null;
+    private ObjectInputStream objectInputStream;
+    private ObjectOutputStream objectOutputStream;
+    private Server server;
+
+    public ServerComms(Socket socket, Server server) {
         this.server = server;
         this.socket = socket;
+
+        //stores a reference to the thread and assigned user in the server class
         server.addUserThread(this);
 
         try {
@@ -30,8 +34,9 @@ public class ServerComms extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println("client has joined");
 
-        System.out.println("added new client");
+        //Sends init payload with data about postcode and menu
         sendMessage(new Payload(server.getUpdate(), TransactionType.updateInfo));
     }
 
@@ -40,18 +45,21 @@ public class ServerComms extends Thread {
         try {
             while ((payload = (Payload) objectInputStream.readObject()) != null) {
                 System.out.println("listening...");
-                doSomething(payload);
+                unpackPayload(payload);
             }
             socket.close();
 
-        } catch (IOException e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+        } finally {
+            System.out.println("client has left");
         }
     }
 
-    //Sends a message
+    /**
+     * Sends the payload to the client
+     * @param payload
+     */
     public void sendMessage(Payload payload) {
         System.out.println("sending payload ->");
         try {
@@ -61,7 +69,12 @@ public class ServerComms extends Thread {
         }
     }
 
-    public void doSomething(Payload payload){
+    /**
+     * Unpacks the payload received and determiness
+     * behaviour next passed on the transaction type
+     * @param payload
+     */
+    public void unpackPayload(Payload payload){
         System.out.println("...stopped listening");
         System.out.println("received payload <-");
         switch (payload.getTransactionType()){
@@ -75,6 +88,7 @@ public class ServerComms extends Thread {
                 break;
             case requestOrder:
                 Order incomingOrder = (Order) payload.getObject();
+                incomingOrder.setId(server.getID(this));
                 server.addOrder(incomingOrder);
                 break;
             default:

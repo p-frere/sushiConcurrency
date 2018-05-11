@@ -1,8 +1,5 @@
 package common;
 
-import server.Server;
-import common.Dish;
-
 import java.util.*;
 
 //----TODO-------
@@ -14,7 +11,8 @@ public class Order extends Model {
 
     private User user;
     private OrderStatus status;
-    public Map<Dish, Number> basket;
+    private Map<Dish, Number> basket;
+    private Integer id; //assigned by the thread the order is delivered too
 
     public Order(User customer, Map<Dish, Number> basket) {
         this.user = customer;
@@ -28,32 +26,12 @@ public class Order extends Model {
         return name;
     }
 
-    //turns the map into a list of
-    public List<Dish> listItems(){
-        List<Dish> list = new ArrayList<>();
-        Iterator it = basket.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry pair = (Map.Entry)it.next();
-            Dish dish = (Dish) pair.getKey();
-            Integer amount = (Integer) pair.getValue();
-            for (int i = 0; i < amount; i++){
-                list.add(dish);
-            }
-        }
-        return list;
-    }
-
     public User getUser() {
         return user;
     }
 
     public Set<Dish> getDishes(){
         return basket.keySet();
-    }
-
-    //get dish quantilty
-    public Integer geetDishQuantity(Dish dish){
-        return basket.get(dish).intValue();
     }
 
     public OrderStatus getStatus() {
@@ -83,8 +61,12 @@ public class Order extends Model {
     public void setStatus(OrderStatus status) {
         this.status = status;
     }
-    //Think of an order as something a drone will carry out
-    // so it has a list of dishes
-    // with corresponding quantities
-    // and a postcode which it will be delivered to
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
 }

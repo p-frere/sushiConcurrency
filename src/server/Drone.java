@@ -26,17 +26,18 @@ public class Drone extends Model implements Runnable {
 
     @Override
     public void run() {
-        while (true) {
-//            Order order = orderManager.takeOrder();
-//            //if no dishes are in queue try again
-//            if (order != null) {
-//                deliver(order, order.getUser());
-//
-//            }
+        Ingredient ingredient;
+        Order order;
 
-            Ingredient ingredient = ingredientsStock.takeFromRestockQueue();
+        while (true) {
+            ingredient = ingredientsStock.takeFromRestockQueue();
             if (ingredient != null){
                 recover(ingredient);
+            }
+
+            order = orderManager.takeOrder();
+            if (order != null) {
+                deliver(order, order.getUser());
             }
 
         }
@@ -44,15 +45,17 @@ public class Drone extends Model implements Runnable {
 
     //recover ingredients from supplier
     public void recover(Ingredient ingredient){
-        //System.out.println(name + " recovering " + ingredient.getName());
+        System.out.println(name + " recovering " + ingredient.getName());
         status = DroneStatus.RECOVERING;
         try {
-            Thread.sleep((long)(ingredient.getSupplier().getDistance() / speed) * 1000);
+            //Thread.sleep((long)(ingredient.getSupplier().getDistance() / speed) * 5000);
+            Thread.sleep(500);
+            ingredientsStock.addStock(ingredient, ingredient.getRestockAmount());
+            status = DroneStatus.IDLE;
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        ingredientsStock.addStock(ingredient, ingredient.getRestockAmount());
-        status = DroneStatus.IDLE;
+
     }
 
     //delivers dish to users
@@ -60,11 +63,14 @@ public class Drone extends Model implements Runnable {
         status = DroneStatus.DELIVERING;
         try {
             //"You can assume a fixed distance for each customer postcode"
-            Thread.sleep((user.getPostCode().getDistance() / speed) * 2); //how long?
+            //Thread.sleep((user.getPostCode().getDistance() / speed) * 2); //how long?
+            Thread.sleep(500);
+            order.setStatus(OrderStatus.COMPLETE);
         } catch (InterruptedException e) {
             System.out.println("errors when deliver sleeping");
         }
         status = DroneStatus.IDLE;
+
         //todo server.send
     }
 

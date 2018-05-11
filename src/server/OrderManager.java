@@ -1,10 +1,8 @@
 package server;
-import common.Dish;
 import common.Order;
 import common.OrderStatus;
 
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -38,7 +36,7 @@ public class OrderManager implements Runnable{
 
     public void completeOrder(Order order){
         outgoingOrders.add(order);
-        order.setStatus(OrderStatus.COMPLETE);
+        order.setStatus(OrderStatus.DELIVERYQUEUE);
     }
 
     /**

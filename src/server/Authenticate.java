@@ -1,7 +1,6 @@
 package server;
 
 import common.User;
-
 import java.util.HashMap;
 //write to file?
 

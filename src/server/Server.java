@@ -3,6 +3,7 @@ package server;
 import common.*;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -139,16 +140,20 @@ public class Server implements ServerInterface {
 //        }
 //
 //    }
-//
-//    public void sendToUser(Integer id, Payload payload) {
-//        System.out.println("send to user");
-//            try {
-//                userThreads.get(id).sendMessage(payload);
-//            } catch (IOException e) {
-//                System.out.println("can't relay info to thread");
-//                e.printStackTrace();
-//            }
-//    }
+
+    public void deliverOrder(Order order){
+        System.out.println("order sent to user");
+        if(order == null){
+            System.out.println("order is null");
+            return;
+        }
+        userThreads.get(order.getId()).sendMessage(new Payload(order, TransactionType.deliverOrder));
+    }
+
+    public void sendToUser(User user, Payload payload) {
+        System.out.println("send to user");
+        userThreads.get(0).sendMessage(payload);
+    }
 
     public void addUserThread(ServerComms sc){
         userThreads.add(sc);
@@ -156,6 +161,10 @@ public class Server implements ServerInterface {
 
     public void removeUserThread(String username){
         userThreads.remove(username);
+    }
+
+    public Integer getID(ServerComms sc){
+        return userThreads.indexOf(sc);
     }
 
     //---------------------Dish--------------------------
