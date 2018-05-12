@@ -1,6 +1,5 @@
 package server;
 import common.Dish;
-import common.Ingredient;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,7 +22,7 @@ public class DishStock implements Runnable{
         }
     }
 
-    public void addStock(Dish dish, Integer amount){
+    public synchronized void addStock(Dish dish, Integer amount){
         if(stock.containsKey(dish)) {
             stock.put(dish, (Integer) stock.get(dish) + amount);
         } else {
@@ -33,7 +32,10 @@ public class DishStock implements Runnable{
         dish.setFetching(false);
     }
 
-    public boolean takeStock(Dish dish){
+    public synchronized boolean takeStock(Dish dish){
+        if(!stock.containsKey(dish)){
+            dish = server.getDish(dish.getName());
+        }
         if(stock.get(dish).intValue() > 0) {
             stock.put(dish, stock.get(dish).intValue() - 1); //takes ingredient
             return true;
@@ -61,17 +63,6 @@ public class DishStock implements Runnable{
 
     }
 
-
-//    public synchronized Dish takeFromRestockQueue(){
-//        if(!restock.isEmpty()){
-//            Iterator iter = restock.iterator();
-//            Dish dish = (Dish) iter.next();
-//            iter.remove();
-//            return dish;
-//        } else {
-//            return null;
-//        }
-//    }
 
     public synchronized Dish takeFromRestockQueue(){
         Iterator iter = restock.iterator();

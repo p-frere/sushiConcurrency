@@ -51,10 +51,9 @@ public class ClientComms implements Runnable{
                 client.setUser((User) payload.getObject());
                 break;
             case deliverOrder:
-                System.out.println("recived order captin ;)7");
                 Order incomingOrder =(Order) payload.getObject();
                 for(Order order : client.getOrders(incomingOrder.getUser())){
-                    if(order.getBasket().equals(incomingOrder.getBasket())){
+                    if(order.getClientID() == incomingOrder.getClientID()){
                         order.setStatus(OrderStatus.COMPLETE);
                     }
                 }

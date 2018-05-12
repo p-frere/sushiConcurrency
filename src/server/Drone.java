@@ -22,6 +22,7 @@ public class Drone extends Model implements Runnable {
         setName("droneSpeed"+speed);
         ingredientsStock = server.getIngredientsStock();
         orderManager =  server.getOrderManager();
+        this.server = server;
     }
 
     @Override
@@ -37,7 +38,15 @@ public class Drone extends Model implements Runnable {
 
             order = orderManager.takeOrder();
             if (order != null) {
-                deliver(order, order.getUser());
+                status = DroneStatus.DELIVERING;
+                try {
+                    Thread.sleep((order.getUser().getPostCode().getDistance() / speed) * 2); //how long?
+                    order.setStatus(OrderStatus.COMPLETE);
+                    server.deliverOrder(order);
+                } catch (InterruptedException e) {
+                    System.out.println("errors when deliver sleeping");
+                }
+                status = DroneStatus.IDLE;
             }
 
         }
@@ -48,8 +57,7 @@ public class Drone extends Model implements Runnable {
         System.out.println(name + " recovering " + ingredient.getName());
         status = DroneStatus.RECOVERING;
         try {
-            //Thread.sleep((long)(ingredient.getSupplier().getDistance() / speed) * 5000);
-            Thread.sleep(500);
+            Thread.sleep((long)(ingredient.getSupplier().getDistance() / speed) * 1000);
             ingredientsStock.addStock(ingredient, ingredient.getRestockAmount());
             status = DroneStatus.IDLE;
         } catch (InterruptedException e) {
@@ -58,21 +66,10 @@ public class Drone extends Model implements Runnable {
 
     }
 
-    //delivers dish to users
-    public void deliver(Order order, User user) {
-        status = DroneStatus.DELIVERING;
-        try {
-            //"You can assume a fixed distance for each customer postcode"
-            //Thread.sleep((user.getPostCode().getDistance() / speed) * 2); //how long?
-            Thread.sleep(500);
-            order.setStatus(OrderStatus.COMPLETE);
-        } catch (InterruptedException e) {
-            System.out.println("errors when deliver sleeping");
-        }
-        status = DroneStatus.IDLE;
-
-        //todo server.send
-    }
+//    //delivers dish to users
+//    public void deliver(Order order) {
+//
+//    }
 
     //setta and getta
     public Integer getSpeed() {

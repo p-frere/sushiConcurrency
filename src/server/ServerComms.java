@@ -50,7 +50,7 @@ public class ServerComms extends Thread {
             socket.close();
 
         } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         } finally {
             System.out.println("client has left");
         }
@@ -88,7 +88,7 @@ public class ServerComms extends Thread {
                 break;
             case requestOrder:
                 Order incomingOrder = (Order) payload.getObject();
-                incomingOrder.setId(server.getID(this));
+                incomingOrder.setServerID(server.getID(this));
                 server.addOrder(incomingOrder);
                 break;
             default:

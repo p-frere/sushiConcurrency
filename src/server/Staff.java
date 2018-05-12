@@ -1,10 +1,11 @@
 package server;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import common.*;
 
-public class Staff extends Model implements Runnable {
+public class Staff extends Model implements Runnable, Serializable {
     private StaffStatus status;
     private Server server;
     private DishStock dishStock;

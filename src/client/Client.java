@@ -190,6 +190,8 @@ public class Client implements ClientInterface {
         basket.clear();
     }
 
+    //----------------Orders-----------------------------------
+
     @Override
     public List<Order> getOrders(User user) {
         return orders;

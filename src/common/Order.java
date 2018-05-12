@@ -12,7 +12,8 @@ public class Order extends Model {
     private User user;
     private OrderStatus status;
     private Map<Dish, Number> basket;
-    private Integer id; //assigned by the thread the order is delivered too
+    private Integer serverID; //assigned by the thread the order is delivered too
+    private Integer clientID;
 
     public Order(User customer, Map<Dish, Number> basket) {
         this.user = customer;
@@ -62,11 +63,19 @@ public class Order extends Model {
         this.status = status;
     }
 
-    public Integer getId() {
-        return id;
+    public Integer getClientID() {
+        return clientID;
     }
 
-    public void setId(Integer id) {
-        this.id = id;
+    public Integer getServerID() {
+        return serverID;
+    }
+
+    public void setClientID(Integer clientID) {
+        this.clientID = clientID;
+    }
+
+    public void setServerID(Integer serverID) {
+        this.serverID = serverID;
     }
 }

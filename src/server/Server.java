@@ -3,7 +3,7 @@ package server;
 import common.*;
 
 import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,6 +31,7 @@ public class Server implements ServerInterface {
     private IngredientsStock ingredientsStock;
     private OrderManager orderManager;
     private Update update;
+    private Storage storage;
 
     public static final int PORT = 4444;
     private List<ServerComms> userThreads;
@@ -48,9 +49,12 @@ public class Server implements ServerInterface {
         dishes = new ArrayList<>();
         ingredients = new ArrayList<>();
 
+
         //set up relations to classes
         authenticate = new Authenticate(this);
         config = new Config(this);
+        storage = new Storage(this);
+
 
         dishStock = new DishStock(this);
         ingredientsStock = new IngredientsStock(this);
@@ -87,7 +91,8 @@ public class Server implements ServerInterface {
 
         new Thread(new OrderBuilder(this)).start();
 
-
+        new Thread(storage).start();
+        //storage.save();
     }
 
 
@@ -121,6 +126,11 @@ public class Server implements ServerInterface {
         ingredientsStock.addStock(ingredient, (Integer) stock);
     }
 
+    //---------------File Saves-------------------------------------
+    public void save(){
+        storage.save();
+    }
+
     //-----------------Communication--------------------------------
     public void initSocket() {
         new Thread(new Comms(this)).start();
@@ -143,17 +153,17 @@ public class Server implements ServerInterface {
 
     public void deliverOrder(Order order){
         System.out.println("order sent to user");
-        if(order == null){
-            System.out.println("order is null");
+        if(order.getServerID() == null){
             return;
         }
-        userThreads.get(order.getId()).sendMessage(new Payload(order, TransactionType.deliverOrder));
+        userThreads.get(order.getServerID()).sendMessage(new Payload(order, TransactionType.deliverOrder));
     }
 
     public void sendToUser(User user, Payload payload) {
         System.out.println("send to user");
         userThreads.get(0).sendMessage(payload);
     }
+
 
     public void addUserThread(ServerComms sc){
         userThreads.add(sc);
