@@ -11,6 +11,7 @@ public class User extends Model implements Serializable {
     private String password;
     private String address;
     private Postcode postCode;
+    private Integer threadID;
 
     public User(String userName, String password, String address, Postcode postCode)
     {
@@ -18,6 +19,7 @@ public class User extends Model implements Serializable {
         this.password = password;
         this.address = address;
         this.postCode = postCode;
+        threadID = null;
     }
 
     public User(String userName, String password)
@@ -47,5 +49,12 @@ public class User extends Model implements Serializable {
         return name;
     }
 
+    public Integer getThreadID() {
+        return threadID;
+    }
+
+    public void setThreadID(Integer threadID) {
+        this.threadID = threadID;
+    }
 }
 

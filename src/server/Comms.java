@@ -1,11 +1,8 @@
 package server;
 
-
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-
-
 
 /**
  * Listens for new incoming connections from clients

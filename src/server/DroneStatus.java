@@ -1,6 +1,8 @@
 package server;
 
-public enum DroneStatus {
+import java.io.Serializable;
+
+public enum DroneStatus implements Serializable {
     IDLE,
     DELIVERING,
     RECOVERING

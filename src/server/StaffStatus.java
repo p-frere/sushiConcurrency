@@ -1,6 +1,8 @@
 package server;
 
-public enum StaffStatus {
+import java.io.Serializable;
+
+public enum StaffStatus implements Serializable{
     IDLE,
     COOKING
 }

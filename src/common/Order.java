@@ -31,6 +31,10 @@ public class Order extends Model {
         return user;
     }
 
+    public void setUser(User user) {
+        this.user = user;
+    }
+
     public Set<Dish> getDishes(){
         return basket.keySet();
     }
@@ -57,6 +61,14 @@ public class Order extends Model {
 
     public Map<Dish, Number> getBasket() {
         return basket;
+    }
+
+    public void setBasket(Map<Dish, Number> basket) {
+        this.basket = basket;
+    }
+
+    public Number geetDishAmount(Dish dish){
+        return basket.get(dish);
     }
 
     public void setStatus(OrderStatus status) {

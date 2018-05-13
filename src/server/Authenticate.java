@@ -2,10 +2,10 @@ package server;
 
 import common.User;
 import java.util.HashMap;
-//write to file?
+
 
 public class Authenticate {
-    private static HashMap<String, User> users;
+    private HashMap<String, User> users;
     private Server server;
 
     public Authenticate(Server server){
@@ -40,7 +40,7 @@ public class Authenticate {
         users.remove(username);
     }
 
-    public static boolean checkExists(String username){
+    public boolean checkExists(String username){
         return users.containsKey(username);
     }
 }

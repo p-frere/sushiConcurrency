@@ -7,8 +7,8 @@ public class Ingredient extends Model implements Serializable{
     //model gives it name
     private String unit;
     private Supplier supplier;
-    Integer restockThreshold;
-    Integer restockAmount;
+    private Integer restockThreshold;
+    private Integer restockAmount;
     private boolean fetching;
 
     public Ingredient(String name, String unit, Supplier supplier, Integer restockThreshold, Integer restockAmount){
@@ -54,5 +54,9 @@ public class Ingredient extends Model implements Serializable{
 
     public void setFetching(boolean requested) {
         this.fetching = requested;
+    }
+
+    public void setSupplier(Supplier supplier) {
+        this.supplier = supplier;
     }
 }

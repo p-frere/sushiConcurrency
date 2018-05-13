@@ -21,7 +21,6 @@ public class ClientComms implements Runnable{
         ObjectInputStream objectInputStream = null;
 
         try {
-            //Socket socket = new Socket("127.0.0.1", 1342);
             objectInputStream = new ObjectInputStream(Client.socket.getInputStream());
             while(true) {
                 Payload payload = (Payload) objectInputStream.readObject();

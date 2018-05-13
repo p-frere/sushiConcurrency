@@ -12,9 +12,9 @@ When it is not collecting stocks, a drone can also deliver customer orders.
 public class Drone extends Model implements Runnable {
     private Integer speed;
     private DroneStatus status;
-    private IngredientsStock ingredientsStock;
-    private OrderManager orderManager;
-    private Server server;
+    private transient IngredientsStock ingredientsStock;
+    private transient OrderManager orderManager;
+    private transient Server server;
 
     public Drone(Integer speed, Server server){
         this.speed = speed;
@@ -42,7 +42,7 @@ public class Drone extends Model implements Runnable {
                 try {
                     Thread.sleep((order.getUser().getPostCode().getDistance() / speed) * 2); //how long?
                     order.setStatus(OrderStatus.COMPLETE);
-                    server.deliverOrder(order);
+                    server.sendToUser(order.getUser(), new Payload(order, TransactionType.deliverOrder));
                 } catch (InterruptedException e) {
                     System.out.println("errors when deliver sleeping");
                 }

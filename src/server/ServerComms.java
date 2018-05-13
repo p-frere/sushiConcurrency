@@ -20,13 +20,14 @@ public class ServerComms extends Thread {
     private ObjectInputStream objectInputStream;
     private ObjectOutputStream objectOutputStream;
     private Server server;
+    private Integer ID;
 
     public ServerComms(Socket socket, Server server) {
         this.server = server;
         this.socket = socket;
 
         //stores a reference to the thread and assigned user in the server class
-        server.addUserThread(this);
+        ID = server.addUserThread(this);
 
         try {
             objectInputStream = new ObjectInputStream(socket.getInputStream());
@@ -78,6 +79,10 @@ public class ServerComms extends Thread {
         System.out.println("...stopped listening");
         System.out.println("received payload <-");
         switch (payload.getTransactionType()){
+            case initUser:
+                User currentUser = server.getUSer(payload.getObject().getName());
+                currentUser.setThreadID(ID);
+                break;
             case requestLogin:
                 User user = server.login((User) payload.getObject());
                 sendMessage(new Payload(user, TransactionType.replyLogin));

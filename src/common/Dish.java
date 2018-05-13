@@ -50,6 +50,10 @@ public class Dish extends Model implements Serializable{
         recipe = map;
     }
 
+    public Number geetIngredientAmount(Ingredient ingredient){
+        return recipe.get(ingredient);
+    }
+
     public void setRestock(Integer restockThreshold, Integer restockAmount){
         this.restockAmount = restockAmount;
         this.restockThreshold = restockThreshold;

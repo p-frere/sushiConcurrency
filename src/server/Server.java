@@ -3,27 +3,25 @@ package server;
 import common.*;
 
 import java.io.FileNotFoundException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.Array;
+import java.util.*;
 
+/**
+ * The server coordinates and allows communication between all classes
+ */
 public class Server implements ServerInterface {
     private boolean restockingIngredientsEnabled;
     private boolean restockingDishesEnabled;
 
     //List of all available resources
-    //Do not represent actual items
-    //More like an index
+    //Do not represent actual items, more like an index
     private List<Drone> drones;
     private List<Staff> staffs;
-    private List<Order> orders;
+    private List<Order> allOrders;
     private List<Postcode> postcodes;
     private List<User> users;
     private List<Supplier> suppliers;
-    private List<Dish> dishes;
-    private List<Ingredient> ingredients;
+
 
     private Authenticate authenticate;
     private Config config;
@@ -42,18 +40,17 @@ public class Server implements ServerInterface {
         restockingDishesEnabled = true;
         drones = new ArrayList<>();
         staffs = new ArrayList<>();
-        orders = new ArrayList<>();
+        allOrders = new ArrayList<>();
         postcodes = new ArrayList<>();
         users = new ArrayList<>();
         suppliers = new ArrayList<>();
-        dishes = new ArrayList<>();
-        ingredients = new ArrayList<>();
+
 
 
         //set up relations to classes
         authenticate = new Authenticate(this);
         config = new Config(this);
-        storage = new Storage(this);
+        //storage = new Storage(this);
 
 
         dishStock = new DishStock(this);
@@ -91,19 +88,8 @@ public class Server implements ServerInterface {
 
         new Thread(new OrderBuilder(this)).start();
 
-        new Thread(storage).start();
-        //storage.save();
-    }
-
-
-    @Override
-    public void loadConfiguration(String filename) throws FileNotFoundException {
-        config.readIn(filename);
-        update = new Update(dishes, postcodes);
-    }
-
-    public Update getUpdate() {
-        return update;
+//        new Thread(storage).start();
+//        storage.save();
     }
 
     @Override
@@ -116,19 +102,16 @@ public class Server implements ServerInterface {
         restockingDishesEnabled = enabled;
     }
 
-    @Override
-    public void setStock(Dish dish, Number stock) {
-        dishStock.addStock(dish,(Integer) stock);
-    }
-
-    @Override
-    public void setStock(Ingredient ingredient, Number stock) {
-        ingredientsStock.addStock(ingredient, (Integer) stock);
-    }
 
     //---------------File Saves-------------------------------------
     public void save(){
         storage.save();
+    }
+
+    @Override
+    public void loadConfiguration(String filename) throws FileNotFoundException {
+        config.readIn(filename);
+        update = new Update(getDishes(), postcodes);
     }
 
     //-----------------Communication--------------------------------
@@ -151,22 +134,30 @@ public class Server implements ServerInterface {
 //
 //    }
 
-    public void deliverOrder(Order order){
-        System.out.println("order sent to user");
-        if(order.getServerID() == null){
-            return;
-        }
-        userThreads.get(order.getServerID()).sendMessage(new Payload(order, TransactionType.deliverOrder));
-    }
+//    public void deliverOrder(Order order){
+//        System.out.println("order sent to user");
+//        if(order.getServerID() == null){
+//            return;
+//        }
+//        userThreads.get(order.getServerID()).sendMessage(new Payload(order, TransactionType.deliverOrder));
+//    }
 
     public void sendToUser(User user, Payload payload) {
         System.out.println("send to user");
-        userThreads.get(0).sendMessage(payload);
+        if(user.getThreadID() == null){
+            System.out.println("WARNING: null threadID, cannot be sent");
+            return;
+        }
+        userThreads.get(user.getThreadID()).sendMessage(payload);
     }
 
+    public Update getUpdate() {
+        return update;
+    }
 
-    public void addUserThread(ServerComms sc){
+    public Integer addUserThread(ServerComms sc){
         userThreads.add(sc);
+        return userThreads.indexOf(sc);
     }
 
     public void removeUserThread(String username){
@@ -184,7 +175,7 @@ public class Server implements ServerInterface {
     }
 
     public Dish getDish(String name){
-        for(Dish dish : dishes){
+        for(Dish dish : getDishes()){
             if (dish.getName().equals(name)){
                 return dish;
             }
@@ -198,14 +189,22 @@ public class Server implements ServerInterface {
         Dish dish = new Dish(name, description, price.intValue(), restockThreshold.intValue(), restockAmount.intValue());
         dish.setRecipe(new HashMap<>());
         dishStock.addStock(dish, 0);
-        dishes.add(dish);
+        return dish;
+    }
+
+    public Dish addDish(Dish dish) {
+        Map<Ingredient,Number> newRecipe = new HashMap<>();
+        for(Ingredient ingredient : dish.getRecipe().keySet()){
+            newRecipe.put(getIngredient(ingredient.getName()), dish.geetIngredientAmount(ingredient));
+        }
+        dish.setRecipe(newRecipe);
+        dishStock.addStock(dish, 0);
         return dish;
     }
 
     @Override
     public void removeDish(Dish dish) throws UnableToDeleteException {
         dishStock.removeStock(dish);
-        dishes.remove(dish);
     }
 
     @Override
@@ -245,7 +244,7 @@ public class Server implements ServerInterface {
 
     @Override
     public Map<Dish, Number> getDishStockLevels() {
-        return dishStock.getStockLevels();
+        return dishStock.getStock();
     }
 
     //-----------------Ingredient-------------------------------
@@ -258,12 +257,16 @@ public class Server implements ServerInterface {
     public Ingredient addIngredient(String name, String unit, Supplier supplier, Number restockThreshold, Number restockAmount) {
         Ingredient ingredient = new Ingredient(name, unit, supplier, (Integer)restockThreshold, (Integer)restockAmount);
         ingredientsStock.addStock(ingredient, 0);
-        ingredients.add(ingredient);
         return ingredient;
     }
 
+    public void addIngredient(Ingredient ingredient) {
+        ingredient.setSupplier(getSupplier(ingredient.getSupplier().getName()));
+        ingredientsStock.addStock(ingredient, 0);
+    }
+
     public Ingredient getIngredient(String ingredientName){
-        for(Ingredient item : ingredients){
+        for(Ingredient item : ingredientsStock.getIngredients()){
             if(item.getName().equals(ingredientName)){
                 return item;
             }
@@ -275,7 +278,6 @@ public class Server implements ServerInterface {
     @Override
     public void removeIngredient(Ingredient ingredient) throws UnableToDeleteException {
         ingredientsStock.removeStock(ingredient);
-        ingredients.remove(ingredient);
     }
 
     @Override
@@ -302,6 +304,10 @@ public class Server implements ServerInterface {
     @Override
     public List<Supplier> getSuppliers() {
         return suppliers;
+    }
+
+    public void setSuppliers(List<Supplier> suppliers) {
+        this.suppliers = suppliers;
     }
 
     public Supplier getSupplier(String name){
@@ -387,17 +393,22 @@ public class Server implements ServerInterface {
     //-------------Order--------------------
     @Override
     public List<Order> getOrders() {
-        return orders;
-
+        return allOrders;
     }
 
     @Override
     public void removeOrder(Order order) throws UnableToDeleteException {
-        orders.remove(order);   //removes from servers persistant list
+        orderManager.cancelOrder(order);  //removes from servers persistant list
     }
 
     public void addOrder(Order order){
-        orders.add(order);
+        Map<Dish, Number> newBasket = new HashMap<>();
+        for (Dish dish : order.getBasket().keySet()){
+            newBasket.put(getDish(dish.getName()), order.geetDishAmount(dish));
+        }
+        order.setBasket(newBasket);
+        order.setUser(getUSer(order.getUser().getName()));
+        allOrders.add(order);
         orderManager.addOrder(order);
     }
 
@@ -434,6 +445,10 @@ public class Server implements ServerInterface {
     @Override
     public List<Postcode> getPostcodes() {
         return postcodes;
+    }
+
+    public void setPostcodes(List<Postcode> postcodes) {
+        this.postcodes = postcodes;
     }
 
     @Override
@@ -475,6 +490,12 @@ public class Server implements ServerInterface {
         authenticate.register(userName, user);
     }
 
+    public void addUser(User user){
+        users.add(user);
+        authenticate.register(user.getUserName(), user);
+        user.setThreadID(null);
+    }
+
     public User login(User user){
         return authenticate.login(user.getUserName(), user.getPassword());
     }
@@ -495,6 +516,16 @@ public class Server implements ServerInterface {
 
     //---------Stocks and Managers----------------------
 
+    @Override
+    public void setStock(Dish dish, Number stock) {
+        dishStock.addStock(dish,(Integer) stock);
+    }
+
+    @Override
+    public void setStock(Ingredient ingredient, Number stock) {
+        ingredientsStock.addStock(ingredient, (Integer) stock);
+    }
+
     public DishStock getDishStock() {
        return dishStock;
     }
@@ -506,6 +537,9 @@ public class Server implements ServerInterface {
     public OrderManager getOrderManager() {
         return orderManager;
     }
+
+    //---------------------------------------------------------------
+
 
     @Override
     public void addUpdateListener(UpdateListener listener) {

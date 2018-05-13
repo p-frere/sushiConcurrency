@@ -121,6 +121,7 @@ public class Client implements ClientInterface {
             }
             notify();
         }
+        send(new Payload(user, TransactionType.initUser));
     }
 
     //---------Postcodes----------------------------

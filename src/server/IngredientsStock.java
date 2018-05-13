@@ -1,6 +1,7 @@
 package server;
 import common.Ingredient;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -34,7 +35,6 @@ public class IngredientsStock implements Runnable{
      * @param amount
      */
     public synchronized void addStock(Ingredient ingredient, Integer amount){
-        //System.out.println(ingredient.getName() + " x 10 added to stock");
         if(stock.containsKey(ingredient)) {
             stock.put(ingredient, (Integer) stock.get(ingredient) + amount);
         }else {
@@ -54,7 +54,6 @@ public class IngredientsStock implements Runnable{
         }
     }
 
-
         //checks if restock is needed
     public synchronized void checkStock(){
         Iterator it = stock.entrySet().iterator();
@@ -71,17 +70,6 @@ public class IngredientsStock implements Runnable{
     public synchronized void addToRestockQueue(Ingredient item){
         restock.add(item);
     }
-
-//    public synchronized Ingredient takeFromRestockQueue(){
-//        if(!restock.isEmpty()){
-//            Iterator iter = restock.iterator();
-//            Ingredient ingredient = (Ingredient)iter.next();
-//            iter.remove();
-//            return ingredient;
-//        } else {
-//            return null;
-//        }
-//    }
 
     public synchronized Ingredient takeFromRestockQueue(){
         Iterator iter = restock.iterator();
@@ -103,10 +91,27 @@ public class IngredientsStock implements Runnable{
         //todo unable to delete exception
     }
 
+    //getters and setters
     public synchronized List<Ingredient> getIngredients(){
         List<Ingredient> list = new ArrayList<>();
         list.addAll(stock.keySet());
         return list;
+    }
+
+    public Map<Ingredient, Number> getStock() {
+        return stock;
+    }
+
+    public void setStock(Map<Ingredient, Number> stock) {
+        this.stock = stock;
+    }
+
+    public synchronized Set<Ingredient> getRestock() {
+        return restock;
+    }
+
+    public synchronized void setRestock(Set<Ingredient> restock) {
+        this.restock = restock;
     }
 
     public synchronized Map<Ingredient, Number> getStockLevels(){

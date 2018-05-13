@@ -7,9 +7,9 @@ import common.*;
 
 public class Staff extends Model implements Runnable, Serializable {
     private StaffStatus status;
-    private Server server;
-    private DishStock dishStock;
-    private IngredientsStock ingredientsStock;
+    private transient Server server;
+    private transient DishStock dishStock;
+    private transient IngredientsStock ingredientsStock;
 
     public Staff(String name, Server server){
         setName(name);

@@ -1,12 +1,9 @@
 package server;
-import common.Dish;
+
 import common.Order;
 import common.OrderStatus;
-
-import java.util.Iterator;
-import java.util.Map;
+import java.util.Iterator;;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -81,5 +78,23 @@ public class OrderManager implements Runnable{
             }
         }
         System.out.println("WARNING: cancelOrder() removed nothing");
+    }
+
+    //gettos and settos
+
+    public Queue<Order> getIncomingOrders() {
+        return incomingOrders;
+    }
+
+    public void setIncomingOrders(Queue<Order> incomingOrders) {
+        this.incomingOrders = incomingOrders;
+    }
+
+    public Queue<Order> getOutgoingOrders() {
+        return outgoingOrders;
+    }
+
+    public void setOutgoingOrders(Queue<Order> outgoingOrders) {
+        this.outgoingOrders = outgoingOrders;
     }
 }
