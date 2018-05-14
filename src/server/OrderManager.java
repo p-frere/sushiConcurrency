@@ -19,6 +19,7 @@ public class OrderManager implements Runnable{
         incomingOrders =  new ConcurrentLinkedQueue<>();
         outgoingOrders = new ConcurrentLinkedQueue<>();
         this.server = server;
+        System.out.println("manager stratesd");
     }
 
     @Override

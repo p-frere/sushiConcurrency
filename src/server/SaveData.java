@@ -8,6 +8,7 @@ import java.util.Queue;
 import java.util.Set;
 
 public class SaveData implements Serializable {
+    private static final long serialVersionUID = 1L;
     private List<Drone> drones;
     private List<Staff> staffs;
     private List<Order> orders;

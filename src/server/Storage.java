@@ -3,8 +3,7 @@ package server;
 import common.*;
 
 import java.io.*;
-import java.util.Iterator;
-import java.util.List;
+
 
 public class Storage implements Serializable, Runnable {
 
@@ -22,6 +21,12 @@ public class Storage implements Serializable, Runnable {
     }
 
     public void save(){
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println(orderManager.getIncomingOrders() == null);
         SaveData saveData = new SaveData(
                 server.getDrones(),
                 server.getStaff(),
@@ -42,6 +47,7 @@ public class Storage implements Serializable, Runnable {
         try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file))) {
             outputStream.writeObject(saveData);
             System.out.println("Saving Done");
+            outputStream.close();
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -53,10 +59,7 @@ public class Storage implements Serializable, Runnable {
         try(ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(file))){
             SaveData data = (SaveData) inputStream.readObject();
             System.out.println("Read object");
-
-
             server.setSuppliers(data.getSuppliers());
-
 
             for(Ingredient ingredient : data.getIngredients()){
                 server.addIngredient(ingredient);
@@ -83,6 +86,7 @@ public class Storage implements Serializable, Runnable {
             for(Drone drone : data.getDrones()){
                 server.addDrone(drone.getSpeed());
             }
+            System.out.println("loaded items");
 
             orderManager.setIncomingOrders(data.getIncomingOrders());
             orderManager.setOutgoingOrders(data.getOutgoingOrders());
@@ -92,12 +96,12 @@ public class Storage implements Serializable, Runnable {
 
             ingredientsStock.setRestock(data.getIngredientRestock());
             ingredientsStock.setStock(data.getIngredientStock());
+            System.out.println("loaded data");
 
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
-
 
     @Override
     public void run() {

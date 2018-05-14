@@ -45,26 +45,24 @@ public class Server implements ServerInterface {
         users = new ArrayList<>();
         suppliers = new ArrayList<>();
 
-
-
-        //set up relations to classes
-        authenticate = new Authenticate(this);
-        config = new Config(this);
-        //storage = new Storage(this);
-
-
         dishStock = new DishStock(this);
         ingredientsStock = new IngredientsStock(this);
         orderManager = new OrderManager(this);
 
+        //set up relations to classes
+        authenticate = new Authenticate(this);
+        config = new Config(this);
+        storage = new Storage(this);
+
+        storage.recover();
 
         //import settings for testing
         //todo remove later
-        try {
-            loadConfiguration("src/config.txt");
-        }catch (Exception e){
-            System.err.println(e);
-        }
+//        try {
+//            loadConfiguration("src/config.txt");
+//        }catch (Exception e){
+//            System.err.println(e);
+//        }
 
         //server setup
         userThreads = new ArrayList<>();
@@ -88,8 +86,8 @@ public class Server implements ServerInterface {
 
         new Thread(new OrderBuilder(this)).start();
 
-//        new Thread(storage).start();
-//        storage.save();
+
+        //storage.save();
     }
 
     @Override

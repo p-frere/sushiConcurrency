@@ -2,16 +2,21 @@ package common;
 
 import java.io.Serializable;
 
+/**
+ * Contains a postcode for an area and distance to the area
+ */
 public class Postcode extends Model implements Serializable {
     private String code;
     private Integer distance;
 
+    //Constructors
     public Postcode(String code, Integer distance){
         this.distance = distance;
         this.code = code;
         setName(code);
     }
 
+    //Getters
     public String getPostcode() {
         return code;
     }

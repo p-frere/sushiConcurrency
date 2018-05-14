@@ -3,15 +3,20 @@ package common;
 import java.io.Serializable;
 import java.util.Map;
 
+/**
+ * Models a Sushi dish that can be ordered
+ * Each sushi dish has a name, a description, a price,
+ * required ingredients and corresponding quantities (its recipe)
+ */
 public class Dish extends Model implements Serializable{
     private String description;
     private Integer price;
-    //model gives name
-    public Map<Ingredient, Number> recipe;
-    private Integer restockThreshold;
-    private Integer restockAmount;
-    private boolean fetching;
+    public Map<Ingredient, Number> recipe;  //recipe
+    private Integer restockThreshold;       //the amount of a dish before restocking is needed
+    private Integer restockAmount;          //how much is restocked at a time
+    private boolean fetching;               //marks if the dish is being operated on
 
+    //constructor
     public Dish(String name, String description, Integer price, Integer restockThreshold, Integer restockAmount){
         setName(name);
         this.description = description;

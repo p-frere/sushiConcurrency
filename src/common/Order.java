@@ -2,19 +2,18 @@ package common;
 
 import java.util.*;
 
-//----TODO-------
-//Status and ID
-//yet to use
-//---------------
-
+/**
+ * Order holds the dishes and quantity as well as the user who made the order
+ */
 public class Order extends Model {
 
     private User user;
     private OrderStatus status;
-    private Map<Dish, Number> basket;
-    private Integer serverID; //assigned by the thread the order is delivered too
+    private Map<Dish, Number> basket;   //the dishes and their amounts
+    private Integer serverID;   //assigned by the thread the order is delivered too
     private Integer clientID;
 
+    //Constructor
     public Order(User customer, Map<Dish, Number> basket) {
         this.user = customer;
         this.basket = basket;
@@ -22,6 +21,7 @@ public class Order extends Model {
         status = OrderStatus.PENDING;
     }
 
+    //Getters and Setters
     @Override
     public String getName() {
         return name;

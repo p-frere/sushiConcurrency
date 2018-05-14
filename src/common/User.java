@@ -1,17 +1,18 @@
 package common;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.ArrayList;
 
+/**
+ * /**
+ * A User is a customer to the sushi ordering service,
+ * The data stored includes their login credentials, an address and previous orders
+ */
 public class User extends Model implements Serializable {
     private String name;
     private String password;
     private String address;
     private Postcode postCode;
-    private Integer threadID;
+    private Integer threadID;   //The threadID stores which server thread a user is assigned to when they connect to the server
 
     public User(String userName, String password, String address, Postcode postCode)
     {

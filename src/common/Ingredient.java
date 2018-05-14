@@ -1,16 +1,20 @@
 package common;
 
 import java.io.Serializable;
-import java.util.Map;
 
+/**
+ * Models an ingredient used in a sushi dish
+ * An ingredient has a name, a unit and a supplier
+ */
 public class Ingredient extends Model implements Serializable{
     //model gives it name
     private String unit;
     private Supplier supplier;
-    private Integer restockThreshold;
-    private Integer restockAmount;
-    private boolean fetching;
+    private Integer restockThreshold;   //Restocks when the amount of an ingredient is below this threshold
+    private Integer restockAmount;      //Amount to be restocked by
+    private boolean fetching;           //marks if the ingredient is being operated on
 
+    //constructor
     public Ingredient(String name, String unit, Supplier supplier, Integer restockThreshold, Integer restockAmount){
         setName(name);
         this.unit = unit;
@@ -19,7 +23,6 @@ public class Ingredient extends Model implements Serializable{
         this.restockThreshold = restockThreshold;
         fetching = false;
     }
-
 
     //Setters and Getters
     @Override
