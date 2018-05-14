@@ -31,7 +31,9 @@ public class Authenticate {
         if (checkExists(username))
             return null;
         else {
+            User newuser = new User(username, user.getPassword(), user.getAddress(), user.getPostCode());
             users.put(username, user);
+            server.addUser(user);
             return user;
         }
     }

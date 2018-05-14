@@ -5,6 +5,8 @@ import common.*;
 import java.io.FileNotFoundException;
 import java.lang.reflect.Array;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * The server coordinates and allows communication between all classes
@@ -30,11 +32,13 @@ public class Server implements ServerInterface {
     private OrderManager orderManager;
     private Update update;
     private Storage storage;
+    private boolean setUpComplete;
 
     public static final int PORT = 4444;
     private List<ServerComms> userThreads;
 
     public Server(){
+        setUpComplete = false;
         //init
         restockingIngredientsEnabled = true;
         restockingDishesEnabled = true;
@@ -54,15 +58,15 @@ public class Server implements ServerInterface {
         config = new Config(this);
         storage = new Storage(this);
 
-        storage.recover();
+        //storage.recover();
 
         //import settings for testing
         //todo remove later
-//        try {
-//            loadConfiguration("src/config.txt");
-//        }catch (Exception e){
-//            System.err.println(e);
-//        }
+        try {
+            loadConfiguration("src/config.txt");
+        }catch (Exception e){
+            System.err.println(e);
+        }
 
         //server setup
         userThreads = new ArrayList<>();
@@ -86,8 +90,9 @@ public class Server implements ServerInterface {
 
         new Thread(new OrderBuilder(this)).start();
 
-
+        setUpComplete = true;
         //storage.save();
+
     }
 
     @Override
@@ -108,8 +113,31 @@ public class Server implements ServerInterface {
 
     @Override
     public void loadConfiguration(String filename) throws FileNotFoundException {
+        clearData();
         config.readIn(filename);
-        update = new Update(getDishes(), postcodes);
+
+    }
+
+    /**
+     * Removes all data from the server
+     * A fresh start
+     */
+    public void clearData(){
+        users.clear();
+        drones.clear();
+        staffs.clear();
+        postcodes.clear();
+        suppliers.clear();
+
+        orderManager.setIncomingOrders(new ConcurrentLinkedQueue<>());
+        orderManager.setOutgoingOrders(new ConcurrentLinkedQueue<>());
+        allOrders.clear();
+        dishStock.setStock(new ConcurrentHashMap<>());
+        dishStock.setRestock(new HashSet<>());
+        ingredientsStock.setStock(new ConcurrentHashMap<>());
+        ingredientsStock.setRestock(new HashSet<>());
+
+
     }
 
     //-----------------Communication--------------------------------
@@ -117,28 +145,15 @@ public class Server implements ServerInterface {
         new Thread(new Comms(this)).start();
     }
 
-//    //sends to all users
-//    public void sendToAll(Payload payload) {
-//        System.out.println("send to all");
-//        //for all threads, send the message back
-//        for(ServerComms st : userThreads){
-//            try {
-//                st.sendMessage(payload);
-//            } catch (IOException e) {
-//                System.out.println("can't relay info to all threads");
-//                e.printStackTrace();
-//            }
-//        }
-//
-//    }
+    //sends to all users
+    public void sendToAll(Payload payload) {
+        System.out.println("send to all");
+        //for all threads, send the message back
+        for(ServerComms st : userThreads){
+            st.sendMessage(payload);
+        }
 
-//    public void deliverOrder(Order order){
-//        System.out.println("order sent to user");
-//        if(order.getServerID() == null){
-//            return;
-//        }
-//        userThreads.get(order.getServerID()).sendMessage(new Payload(order, TransactionType.deliverOrder));
-//    }
+    }
 
     public void sendToUser(User user, Payload payload) {
         System.out.println("send to user");
@@ -150,7 +165,7 @@ public class Server implements ServerInterface {
     }
 
     public Update getUpdate() {
-        return update;
+        return new Update(getDishes(), postcodes);
     }
 
     public Integer addUserThread(ServerComms sc){
@@ -158,10 +173,20 @@ public class Server implements ServerInterface {
         return userThreads.indexOf(sc);
     }
 
-    public void removeUserThread(String username){
-        userThreads.remove(username);
+    /**
+     * Removes a the thread assigned to the user when they leave
+     * @param sc
+     */
+    public void removeUserThread(ServerComms sc){
+        userThreads.remove(sc);
     }
 
+    /**
+     * Gets the thread ID, a number assigned to the thread so it can be
+     * referenced when sending messages.
+     * @param sc Server Comms
+     * @return Integer ID
+     */
     public Integer getID(ServerComms sc){
         return userThreads.indexOf(sc);
     }
@@ -187,6 +212,10 @@ public class Server implements ServerInterface {
         Dish dish = new Dish(name, description, price.intValue(), restockThreshold.intValue(), restockAmount.intValue());
         dish.setRecipe(new HashMap<>());
         dishStock.addStock(dish, 0);
+
+        //sends the updated dish menu to the client
+        if (setUpComplete)
+            sendToAll(new Payload(getUpdate(), TransactionType.updateInfo));
         return dish;
     }
 
@@ -203,6 +232,10 @@ public class Server implements ServerInterface {
     @Override
     public void removeDish(Dish dish) throws UnableToDeleteException {
         dishStock.removeStock(dish);
+
+        //sends the updated dish menu to the client
+        if (setUpComplete)
+            sendToAll(new Payload(getUpdate(), TransactionType.updateInfo));
     }
 
     @Override
@@ -395,8 +428,10 @@ public class Server implements ServerInterface {
     }
 
     @Override
-    public void removeOrder(Order order) throws UnableToDeleteException {
+    public void removeOrder(Order order) {
+        order = getOrder(order);
         orderManager.cancelOrder(order);  //removes from servers persistant list
+        allOrders.remove(order);
     }
 
     public void addOrder(Order order){
@@ -408,6 +443,15 @@ public class Server implements ServerInterface {
         order.setUser(getUSer(order.getUser().getName()));
         allOrders.add(order);
         orderManager.addOrder(order);
+    }
+
+    public Order getOrder(Order newOrder){
+        for (Order order : allOrders){
+            if (order.getBasket().equals(newOrder)){
+                return order;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -428,15 +472,6 @@ public class Server implements ServerInterface {
     @Override
     public Number getOrderCost(Order order) {
         return order.getOrderCost();
-    }
-
-    public void cancelOrder(Order order){
-        orderManager.cancelOrder(order);
-        try {
-            removeOrder(order);
-        } catch (UnableToDeleteException e) {
-            e.printStackTrace();
-        }
     }
 
     //-------------Postcode--------------------------

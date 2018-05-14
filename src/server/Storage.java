@@ -98,6 +98,8 @@ public class Storage implements Serializable, Runnable {
             ingredientsStock.setStock(data.getIngredientStock());
             System.out.println("loaded data");
 
+            server.sendToAll(new Payload(server.getUpdate(), TransactionType.updateInfo));
+
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }

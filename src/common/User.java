@@ -14,6 +14,7 @@ public class User extends Model implements Serializable {
     private Postcode postCode;
     private Integer threadID;   //The threadID stores which server thread a user is assigned to when they connect to the server
 
+    //constructor for initial creation
     public User(String userName, String password, String address, Postcode postCode)
     {
         this.name = userName;
@@ -23,6 +24,7 @@ public class User extends Model implements Serializable {
         threadID = null;
     }
 
+    //constructor for recovery of the user from a file
     public User(String userName, String password)
     {
         this.name = userName;

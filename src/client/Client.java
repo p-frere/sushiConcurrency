@@ -20,31 +20,33 @@ public class Client implements ClientInterface {
     List<Dish> dishes;
     Map<Dish, Number> basket;
     List<Order> orders;
+    UpdateListener listener;
+    boolean setUpComplete;
 
     public static Socket socket;
     ObjectOutputStream objectOutputStream;
 
     public Client(){
-
-
+        setUpComplete = false;
         postcodes = new ArrayList<>();
-        dishes = new ArrayList<>();
         basket = new HashMap<>();
         orders = new ArrayList<>();
+        dishes = new ArrayList<>();
 
         synchronized (this) {
             initSocket();
             try {
-                wait();
+                wait(5000);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                //e.printStackTrace();
             }
         }
 
         for(Postcode postcode : postcodes)
             System.out.println(postcode.getName());
-        window = new ClientWindow(this);
 
+        window = new ClientWindow(this);
+        setUpComplete = true;
 
     }
 
@@ -57,7 +59,8 @@ public class Client implements ClientInterface {
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             new Thread(new ClientComms(this)).start();
         } catch (IOException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
+            System.out.println("Cannot connect to Server");
         }
     }
 
@@ -71,6 +74,17 @@ public class Client implements ClientInterface {
             e.printStackTrace();
         }
     }
+
+    public void updateInfo(List<Dish> dishes, List<Postcode> postcodes) {
+        synchronized (this) {
+            this.dishes = dishes;
+            this.postcodes = postcodes;
+            if (setUpComplete)
+                notifyUpdate();
+            notify();
+        }
+    }
+
 
     //------------User------------------------
 
@@ -125,13 +139,6 @@ public class Client implements ClientInterface {
     }
 
     //---------Postcodes----------------------------
-    public void updateInfo(List<Dish> dishes, List<Postcode> postcodes) {
-        synchronized (this) {
-            this.dishes = dishes;
-            this.postcodes = postcodes;
-            notify();
-        }
-    }
 
     @Override
     public List<Postcode> getPostcodes() {
@@ -215,19 +222,21 @@ public class Client implements ClientInterface {
 
     @Override
     public void cancelOrder(Order order) {
+        System.out.println("request to cancel");
+        order.setStatus(OrderStatus.CANCELED);
         send(new Payload(order, TransactionType.requestCancel));
-        orders.remove(order);
     }
 
     //----------updates-----------------------------
 
+
     @Override
     public void addUpdateListener(UpdateListener listener) {
-
+        this.listener = listener;
     }
 
     @Override
     public void notifyUpdate() {
-
+        window.updated(new UpdateEvent());
     }
 }

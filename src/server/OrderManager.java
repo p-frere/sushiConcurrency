@@ -15,11 +15,11 @@ public class OrderManager implements Runnable{
     private Queue<Order> outgoingOrders;    //orders that we have (need to be droned out)
     private Server server;
 
+    //Constructor
     public OrderManager(Server server){
         incomingOrders =  new ConcurrentLinkedQueue<>();
         outgoingOrders = new ConcurrentLinkedQueue<>();
         this.server = server;
-        System.out.println("manager stratesd");
     }
 
     @Override
@@ -32,9 +32,14 @@ public class OrderManager implements Runnable{
      */
     public void addOrder(Order order){
         incomingOrders.add(order);
-        System.out.println("order added");
+        System.out.println("-- order added");
     }
 
+    /**
+     * called when the makeup of an order is complete
+     * adds to the outgoing orders queue
+     * @param order
+     */
     public void completeOrder(Order order){
         outgoingOrders.add(order);
         order.setStatus(OrderStatus.DELIVERYQUEUE);
@@ -53,6 +58,10 @@ public class OrderManager implements Runnable{
         }
     }
 
+    /**
+     * Takes an order in order to make it
+     * @return
+     */
     public Order takeFromIncomingOrders(){
         if(!incomingOrders.isEmpty()){
             return incomingOrders.poll();

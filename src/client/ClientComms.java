@@ -56,7 +56,6 @@ public class ClientComms implements Runnable{
                         order.setStatus(OrderStatus.COMPLETE);
                     }
                 }
-
                 break;
             default:
                 System.out.println("unknown request");
