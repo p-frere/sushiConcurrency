@@ -19,7 +19,7 @@ public class ServerComms extends Thread {
     private ObjectInputStream objectInputStream;
     private ObjectOutputStream objectOutputStream;
     private Server server;
-    private Integer ID;
+    private Integer ID;   //ID to identify each thread, later used to assign a user
 
     //Constructor
     public ServerComms(Socket socket, Server server) {
@@ -59,7 +59,7 @@ public class ServerComms extends Thread {
 
     /**
      * Sends the payload to the client
-     * @param payload
+     * @param payload package to send
      */
     public void sendMessage(Payload payload) {
         System.out.println("sending payload ->");
@@ -73,7 +73,7 @@ public class ServerComms extends Thread {
     /**
      * Unpacks the payload received and determines
      * behaviour by reading on the transaction type
-     * @param payload
+     * @param payload package received
      */
     public void unpackPayload(Payload payload){
         System.out.println("...stopped listening");

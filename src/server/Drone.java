@@ -57,6 +57,7 @@ public class Drone extends Model implements Runnable {
             order.setStatus(OrderStatus.COMPLETE);
             //send order to client
             server.sendToUser(order.getUser(), new Payload(order, TransactionType.deliverOrder));
+            server.save();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

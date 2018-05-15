@@ -24,8 +24,8 @@ public class DishStock implements Runnable{
 
     /**
      * Adds dishes to stock and stores the amount
-     * @param dish
-     * @param amount
+     * @param dish item to add
+     * @param amount the quantity
      */
     public synchronized void addStock(Dish dish, Integer amount){
         if(stock.containsKey(dish)) {
@@ -41,10 +41,10 @@ public class DishStock implements Runnable{
      * Takes stoke from the store one dish at a time
      * removes a dish and returns true if dish can be taken
      * returns false if not
-     * @param dish
-     * @return
+     * @param dish item taken
+     * @return flag if successful
      */
-    public synchronized boolean takeStock(Dish dish){
+    public boolean takeStock(Dish dish){
         if(!stock.containsKey(dish)){
             dish = server.getDish(dish.getName());
         }
@@ -75,7 +75,7 @@ public class DishStock implements Runnable{
     /**
      * A needed dish is added to restock,
      * This is a set so a dish can only be requested once per time
-     * @param dish
+     * @param dish item required
      */
     public synchronized void addToRestockQueue(Dish dish){
         restock.add(dish);
@@ -96,7 +96,9 @@ public class DishStock implements Runnable{
             dish = (Dish) iter.next();
             if (!dish.isFetching()){
                 //if it hasn't been fetched yet
+                dish.setFetching(true);
                 return dish;
+
             }
         }
         //nothing to be taken
@@ -115,12 +117,9 @@ public class DishStock implements Runnable{
     //Getters and Setters
     public List<Dish> getDishes(){
         List<Dish> list = new ArrayList<>();
-        for (Dish dish : stock.keySet()){
-            list.add(dish);
-        }
+        list.addAll(stock.keySet());
         return list;
     }
-
 
     public Map<Dish, Number> getStock() {
         return stock;

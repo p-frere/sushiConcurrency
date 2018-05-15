@@ -33,16 +33,14 @@ public class Staff extends Model implements Runnable, Serializable {
 
             Dish dish = dishStock.takeFromRestockQueue();
             if (dish != null) {
-                //System.out.println(getName() + "is collecting for " + dish.getName());
-
                 boolean dishMade = false;
-                Map<Ingredient, Number> recipe = new HashMap<>(dish.getRecipe()); //remove to partial work
-                Map<Ingredient, Number> obtained = new HashMap<>(dish.getRecipe());
-                for(Ingredient ingredient : obtained.keySet()){
+                Map<Ingredient, Number> recipe = new HashMap<>(dish.getRecipe()); //what is needed to be collected
+                Map<Ingredient, Number> obtained = new HashMap<>(dish.getRecipe()); //what has been collected
+                for(Ingredient ingredient : obtained.keySet()){                     //sets all values to 0
                     obtained.put(ingredient, 0);
                 }
-
                 while (!dishMade) {
+                    //for every ingredient needed, try to take this from the stock and store if for later use
                     for(Ingredient ingredient : obtained.keySet()){
                         if(recipe.get(ingredient).intValue() > obtained.get(ingredient).intValue()){
                             if (ingredientsStock.takeStock(ingredient)){
@@ -50,7 +48,7 @@ public class Staff extends Model implements Runnable, Serializable {
                             }
                         }
                     }
-
+                    //when the recipe matches the ingredients that have been obtained, cook the dish
                     if(recipe.equals(obtained)){
                         getCookin(dish);
                         dishMade = true;
@@ -61,7 +59,7 @@ public class Staff extends Model implements Runnable, Serializable {
     }
 
     /**
-     * Cooks a dish
+     * Cooks the dish and adds it to dish stock
      * @param dish
      */
     public void getCookin(Dish dish) {
@@ -70,7 +68,7 @@ public class Staff extends Model implements Runnable, Serializable {
         try {
             System.out.println(getName() + ": cooking");
             Thread.sleep((rand.nextInt(40)+20)*100); // Simulates the time to prepare
-            dishStock.addStock(dish, 10);
+            dishStock.addStock(dish, dish.getRestockAmount());
 
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -79,6 +77,7 @@ public class Staff extends Model implements Runnable, Serializable {
         status = StaffStatus.IDLE;
     }
 
+    //Getters and setters
     @Override
     public String getName() {
         return name;

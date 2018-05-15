@@ -58,15 +58,15 @@ public class Server implements ServerInterface {
         config = new Config(this);
         storage = new Storage(this);
 
-        //storage.recover();
+        storage.recover();
 
         //import settings for testing
         //todo remove later
-        try {
-            loadConfiguration("src/config.txt");
-        }catch (Exception e){
-            System.err.println(e);
-        }
+//        try {
+//            loadConfiguration("src/config.txt");
+//        }catch (Exception e){
+//            System.err.println(e);
+//        }
 
         //server setup
         userThreads = new ArrayList<>();
@@ -115,7 +115,6 @@ public class Server implements ServerInterface {
     public void loadConfiguration(String filename) throws FileNotFoundException {
         clearData();
         config.readIn(filename);
-
     }
 
     /**
