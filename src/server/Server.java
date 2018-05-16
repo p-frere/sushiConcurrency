@@ -33,6 +33,7 @@ public class Server implements ServerInterface {
     private Update update;
     private Storage storage;
     private boolean setUpComplete;
+    private UpdateListener listener;
 
     public static final int PORT = 4444;
     private List<ServerComms> userThreads;
@@ -58,15 +59,15 @@ public class Server implements ServerInterface {
         config = new Config(this);
         storage = new Storage(this);
 
-        storage.recover();
+        //storage.recover();
 
         //import settings for testing
         //todo remove later
-//        try {
-//            loadConfiguration("src/config.txt");
-//        }catch (Exception e){
-//            System.err.println(e);
-//        }
+        try {
+            loadConfiguration("src/config.txt");
+        }catch (Exception e){
+            System.err.println(e);
+        }
 
         //server setup
         userThreads = new ArrayList<>();
@@ -135,6 +136,7 @@ public class Server implements ServerInterface {
         dishStock.setRestock(new HashSet<>());
         ingredientsStock.setStock(new ConcurrentHashMap<>());
         ingredientsStock.setRestock(new HashSet<>());
+        authenticate.setUsers(new HashMap<>());
 
 
     }
@@ -434,12 +436,36 @@ public class Server implements ServerInterface {
     }
 
     public void addOrder(Order order){
+
+        System.out.println();
+        for(Map.Entry<Dish, Number> entry : order.getBasket().entrySet()) {
+            Dish dish = entry.getKey();
+            Number value = entry.getValue();
+
+            System.out.println(dish.getName() + " x" + value);
+
+        }
+
+        System.out.println();
         Map<Dish, Number> newBasket = new HashMap<>();
+
         for (Dish dish : order.getBasket().keySet()){
             newBasket.put(getDish(dish.getName()), order.geetDishAmount(dish));
         }
         order.setBasket(newBasket);
         order.setUser(getUSer(order.getUser().getName()));
+        order.getUser().addOrder(order);
+
+        System.out.println();
+        for(Map.Entry<Dish, Number> entry : order.getBasket().entrySet()) {
+            Dish dish = entry.getKey();
+            Number value = entry.getValue();
+
+            System.out.println(dish.getName() + " x" + value);
+
+        }
+        System.out.println();
+
         allOrders.add(order);
         orderManager.addOrder(order);
     }
@@ -505,37 +531,93 @@ public class Server implements ServerInterface {
 
     //-------------Users------------------------------
 
+    /**
+     * Returns all the users registered within the system
+     * @return
+     */
     @Override
     public List<User> getUsers() {
         return users;
     }
 
+    /**
+     * Removes a user from the system
+     * @param user to remove
+     * @throws UnableToDeleteException
+     */
     @Override
     public void removeUser(User user) throws UnableToDeleteException {
         users.remove(user);
         authenticate.removeUser(user.getName());
     }
 
+    /**
+     * Adds a new user to the server
+     * @param userName
+     * @param password
+     * @param address
+     * @param postCode
+     */
     public void addUser(String userName, String password, String address, Postcode postCode){
         User user = new User(userName, password,address, postCode);
-        users.add(user);
         authenticate.register(userName, user);
     }
 
+    /**
+     * Initialises an returning user object
+     * @param user
+     */
     public void addUser(User user){
-        users.add(user);
         authenticate.register(user.getUserName(), user);
         user.setThreadID(null);
     }
 
+    /**
+     * Adds the user to a central list in the server
+     * used for searching
+     * @param user
+     */
+    public void addToUserList(User user){
+        users.add(user);
+    }
+
+    /**
+     * Requests the login authentication of a user
+     * @param user
+     * @return
+     */
     public User login(User user){
         return authenticate.login(user.getUserName(), user.getPassword());
     }
 
+    /**
+     * Requests a registration of a user
+     * @param user
+     * @return
+     */
     public User register(User user){
         return authenticate.register(user.getUserName(), user);
     }
 
+    /**
+     * Returns the user assigned to a thread
+     * @param ID int
+     * @return user
+     */
+    public User getUser(Integer ID){
+        for(User user : users){
+            if(user.getThreadID() == ID){
+                return user;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns a User for the given username
+     * @param username string
+     * @return user
+     */
     public User getUSer(String username){
         for (User user : users){
             if(user.getName().equals(username)){
@@ -575,11 +657,11 @@ public class Server implements ServerInterface {
 
     @Override
     public void addUpdateListener(UpdateListener listener) {
-        //listners
+        this.listener = listener;
     }
 
     @Override
     public void notifyUpdate() {
-        //todo
+        listener.updated(new UpdateEvent());
     }
 }

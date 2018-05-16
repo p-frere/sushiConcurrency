@@ -12,15 +12,14 @@ import java.util.List;
 import java.util.Map;
 
 public class Client implements ClientInterface {
-    ClientWindow window;
-    ClientComms comms;
-    User user;
+    private ClientComms comms;
+    private User user;
 
-    List<Postcode> postcodes;
-    List<Dish> dishes;
-    Map<Dish, Number> basket;
-    List<Order> orders;
-    UpdateListener listener;
+    private List<Postcode> postcodes;
+    private List<Dish> dishes;
+    //private Map<Dish, Number> basket;
+    //private List<Order> orders;
+    private UpdateListener listener;
     boolean setUpComplete;
 
     public static Socket socket;
@@ -29,8 +28,8 @@ public class Client implements ClientInterface {
     public Client(){
         setUpComplete = false;
         postcodes = new ArrayList<>();
-        basket = new HashMap<>();
-        orders = new ArrayList<>();
+        //basket = new HashMap<>();
+        //orders = new ArrayList<>();
         dishes = new ArrayList<>();
 
         synchronized (this) {
@@ -45,7 +44,6 @@ public class Client implements ClientInterface {
         for(Postcode postcode : postcodes)
             System.out.println(postcode.getName());
 
-        window = new ClientWindow(this);
         setUpComplete = true;
 
     }
@@ -68,6 +66,7 @@ public class Client implements ClientInterface {
     public void send(Payload payload) {
         try {
             objectOutputStream.writeObject(payload);
+            objectOutputStream  .reset();
             System.out.println("Sent message");
         } catch (IOException e) {
             System.out.println("error in print stream");
@@ -161,48 +160,52 @@ public class Client implements ClientInterface {
         return dish.getPrice();
     }
 
+    //------------Basket------------------------
+
     @Override
     public Map<Dish, Number> getBasket(User user) {
-        return basket;
+        return user.getBasket();
     }
 
     @Override
     public Number getBasketCost(User user) {
         Integer total = 0;
-        for(Dish dish : basket.keySet()){
-            total+=(dish.getPrice() * basket.get(dish).intValue());
+        for(Dish dish : user.getBasket().keySet()){
+            total+=(dish.getPrice() * user.getBasket().get(dish).intValue());
         }
         return total;
     }
 
     @Override
     public void addDishToBasket(User user, Dish dish, Number quantity) {
-        basket.put(dish, quantity);
+        user.updateBasket(dish, quantity);
     }
 
     @Override
     public void updateDishInBasket(User user, Dish dish, Number quantity) {
-        basket.put(dish, quantity);
+        user.updateBasket(dish, quantity);
     }
 
     @Override
     public Order checkoutBasket(User user) {
-        Order newOrder = new Order(user, basket);
-        orders.add(newOrder);
+        Order newOrder = new Order(user, user.getBasket());
+        user.addOrder(newOrder);
+        clearBasket(user);
+        print(newOrder.getBasket());
         send(new Payload(newOrder, TransactionType.requestOrder));
         return newOrder;
     }
 
     @Override
     public void clearBasket(User user) {
-        basket.clear();
+        user.setBasket(new HashMap<>());
     }
 
     //----------------Orders-----------------------------------
 
     @Override
     public List<Order> getOrders(User user) {
-        return orders;
+        return user.getOrders();
     }
 
     @Override
@@ -237,6 +240,19 @@ public class Client implements ClientInterface {
 
     @Override
     public void notifyUpdate() {
-        window.updated(new UpdateEvent());
+        listener.updated(new UpdateEvent());
+    }
+
+    //todo remove
+    public void print(Map<Dish, Number> map){
+        System.out.println();
+        for(Map.Entry<Dish, Number> entry : map.entrySet()) {
+            Dish dish = entry.getKey();
+            Number value = entry.getValue();
+
+            System.out.println(dish.getName() + " x" + value);
+
+        }
+        System.out.println();
     }
 }

@@ -63,18 +63,23 @@ public class Staff extends Model implements Runnable, Serializable {
      * @param dish
      */
     public void getCookin(Dish dish) {
-        status = StaffStatus.COOKING;
+        setStatus(StaffStatus.COOKING);
         Random rand = new Random();
         try {
             System.out.println(getName() + ": cooking");
-            Thread.sleep((rand.nextInt(40)+20)*100); // Simulates the time to prepare
+            Thread.sleep(3000); //(rand.nextInt(40)+20)*1000); // Simulates the time to prepare
             dishStock.addStock(dish, dish.getRestockAmount());
 
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
         System.out.println(getName() + ": finished");
-        status = StaffStatus.IDLE;
+       setStatus(StaffStatus.IDLE);
+    }
+
+    public void setStatus(StaffStatus status) {
+        this.status = status;
+        notifyUpdate();
     }
 
     //Getters and setters

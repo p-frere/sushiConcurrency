@@ -5,8 +5,8 @@ import java.io.IOException;
 
 public class ServerApplication {
     public static void main(String[] args) throws IOException {
-        ServerApplication app = new ServerApplication();
-        app.launchGUI(app.initialise());
+        ServerApplication sa = new ServerApplication();
+        sa.launchGUI(sa.initialise());
     }
 
     private Server initialise(){
@@ -14,6 +14,6 @@ public class ServerApplication {
     }
 
     private void launchGUI(ServerInterface serverInterface){
-        ServerWindow sw = new ServerWindow(serverInterface);
+        new ServerWindow(serverInterface);
     }
 }

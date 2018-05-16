@@ -1,6 +1,10 @@
 package common;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * /**
@@ -13,6 +17,8 @@ public class User extends Model implements Serializable {
     private String address;
     private Postcode postCode;
     private Integer threadID;   //The threadID stores which server thread a user is assigned to when they connect to the server
+    private List<Order> orders;
+    private Map<Dish, Number> basket;
 
     //constructor for initial creation
     public User(String userName, String password, String address, Postcode postCode)
@@ -21,6 +27,8 @@ public class User extends Model implements Serializable {
         this.password = password;
         this.address = address;
         this.postCode = postCode;
+        orders = new ArrayList<>();
+        basket = new HashMap<>();
         threadID = null;
     }
 
@@ -59,5 +67,32 @@ public class User extends Model implements Serializable {
     public void setThreadID(Integer threadID) {
         this.threadID = threadID;
     }
+
+    public List<Order> getOrders() {
+        return orders;
+    }
+
+    public void setOrders(List<Order> orders) {
+        this.orders = orders;
+    }
+
+    public void addOrder(Order order){
+        orders.add(order);
+        order.setOrderID(orders.indexOf(order));
+    }
+
+    public Map<Dish, Number> getBasket() {
+        return basket;
+    }
+
+    public void setBasket(Map<Dish, Number> basket) {
+        this.basket = basket;
+    }
+
+    public void updateBasket(Dish dish, Number quantity) {
+        basket.put(dish, quantity);
+    }
+
+
 }
 

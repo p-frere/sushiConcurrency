@@ -27,9 +27,7 @@ public class ClientComms implements Runnable{
                 System.out.println("recived");
                 doSomething(payload);
             }
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (ClassNotFoundException | IOException e) {
             e.printStackTrace();
         }
 
@@ -52,7 +50,7 @@ public class ClientComms implements Runnable{
             case deliverOrder:
                 Order incomingOrder =(Order) payload.getObject();
                 for(Order order : client.getOrders(incomingOrder.getUser())){
-                    if(order.getClientID() == incomingOrder.getClientID()){
+                    if(order.getOrderID() == incomingOrder.getOrderID()){
                         order.setStatus(OrderStatus.COMPLETE);
                     }
                 }

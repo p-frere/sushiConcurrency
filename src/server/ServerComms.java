@@ -54,6 +54,8 @@ public class ServerComms extends Thread {
         } finally {
             System.out.println("client has disconnected");
             server.removeUserThread(this);
+            //removes the thread reference from the user
+            server.getUser(ID).setThreadID(null);
         }
     }
 
@@ -94,7 +96,6 @@ public class ServerComms extends Thread {
                 break;
             case requestOrder:
                 Order incomingOrder = (Order) payload.getObject();
-                incomingOrder.setServerID(server.getID(this));
                 server.addOrder(incomingOrder);
                 break;
             case requestCancel:

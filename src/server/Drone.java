@@ -53,7 +53,7 @@ public class Drone extends Model implements Runnable {
         status = DroneStatus.DELIVERING;
         try {
             //represents delivery time
-            Thread.sleep((order.getUser().getPostCode().getDistance() / speed) * 4000);
+            Thread.sleep(3000); //(order.getUser().getPostCode().getDistance() / speed) * 7000);
             order.setStatus(OrderStatus.COMPLETE);
             //send order to client
             server.sendToUser(order.getUser(), new Payload(order, TransactionType.deliverOrder));
@@ -74,7 +74,7 @@ public class Drone extends Model implements Runnable {
         status = DroneStatus.RECOVERING;
         try {
             //represents recovery time
-            Thread.sleep((long)(ingredient.getSupplier().getDistance() / speed) * 4000);
+            Thread.sleep(3000); //(long)(ingredient.getSupplier().getDistance() / speed) * 7000);
             ingredientsStock.addStock(ingredient, ingredient.getRestockAmount());
             status = DroneStatus.IDLE;
         } catch (InterruptedException e) {

@@ -3,7 +3,10 @@ package server;
 import common.User;
 import java.util.HashMap;
 
-
+/**
+ * The Authenticate class handles login and registration
+ * of users
+ */
 public class Authenticate {
     private HashMap<String, User> users;
     private Server server;
@@ -31,11 +34,14 @@ public class Authenticate {
         if (checkExists(username))
             return null;
         else {
-            User newuser = new User(username, user.getPassword(), user.getAddress(), user.getPostCode());
             users.put(username, user);
-            server.addUser(user);
+            server.addToUserList(user);
             return user;
         }
+    }
+
+    public void setUsers(HashMap<String, User> users){
+        this.users = users;
     }
 
     public void removeUser(String username){

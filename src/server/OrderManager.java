@@ -33,6 +33,7 @@ public class OrderManager implements Runnable{
     public void addOrder(Order order){
         incomingOrders.add(order);
         System.out.println("-- order added");
+        //order.setStatus(OrderStatus.COOKINGQUEUE);
     }
 
     /**

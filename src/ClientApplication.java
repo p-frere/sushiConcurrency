@@ -1,24 +1,22 @@
 
 import client.Client;
-
+import client.ClientInterface;
+import client.ClientWindow;
 import java.io.IOException;
 
 public class ClientApplication {
 
     public static void main(String[] args) throws IOException {
-        Client client = new Client();
+        ClientApplication ca = new ClientApplication();
+        ca.launchGUI(ca.initialise());
     }
 
-    /*
-    an initialise()
-     method which takes no parameters and which prepares anything necessary for your implementation and
-     returns the implementation of ClientInterface,
+    private Client initialise(){
+        return new Client();
+    }
 
-a launchGUI(clientInterface)
-method which launches the GUI by creating a ClientWindow given the implementation of the ClientInterface,
+    private void launchGUI(ClientInterface clientInterface){
+       new ClientWindow(clientInterface);
+    }
 
-a main() method which calls initialise and then launchGUI. It should not do anything else,
-Running ClientApplication will launch the client.
-
-     */
 }
