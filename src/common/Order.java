@@ -17,7 +17,7 @@ public class Order extends Model {
         this.user = customer;
         this.basket = basket;
         setName(user.getUserName()+" Order");
-        status = OrderStatus.PENDING;
+        setStatus(OrderStatus.PENDING);
     }
 
     //Getters and Setters
@@ -72,13 +72,14 @@ public class Order extends Model {
 
     public void setStatus(OrderStatus status) {
         this.status = status;
+        notifyUpdate();
     }
 
     public Integer getOrderID() {
         return orderID;
     }
 
-    public void setOrderID(Integer clientID) {
+    public void setOrderID(Integer orderID) {
         this.orderID = orderID;
     }
 

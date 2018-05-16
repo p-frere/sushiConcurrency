@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * OrderBuilder is collects all the dishes required for the current order
+ * OrderBuilder collects all the dishes required for the current order
  * when it has enough to match the order it returns the completed order to being on the
  * next.
  */
@@ -26,7 +26,7 @@ public class OrderBuilder implements Runnable{
         while (true) {
             Order order = orderManager.takeFromIncomingOrders();
             if (order != null) {
-                System.out.println("order is collecting for an order");
+                System.out.println("collecting for a new order");
                 boolean orderMade = false;
                 Map<Dish, Number> basket = new HashMap<>(order.getBasket());    //What needs to be obtained
                 Map<Dish, Number> obtained = new HashMap<>(order.getBasket());  //What has been obtained
@@ -44,6 +44,7 @@ public class OrderBuilder implements Runnable{
                         }
                     }
 
+                    //check if all items are obtain or it has to collect more
                     if(basket.equals(obtained)){
                         orderManager.completeOrder(order);
                         orderMade = true;

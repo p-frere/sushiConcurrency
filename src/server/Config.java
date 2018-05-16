@@ -1,6 +1,5 @@
 package server;
 
-
 import common.Dish;
 import common.Ingredient;
 import common.Order;
@@ -9,31 +8,46 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * The config file handles the opening and reading
+ * on a config file in the correct format.
+ * It then sets up the system to align with these passed settings
+ */
 public class Config {
     private Server server;
 
+    //Constructor
     public Config(Server server){
         this.server = server;
 
     }
 
+    /**
+     * Controls the reading of a file,
+     * process the content one line at a time
+     * @param file location of the config file
+     */
     public void readIn(String file){
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = br.readLine()) != null) {
+                //Creates an array of tokens in the line
                 String[] content = line.split(":");
-                //System.out.println(content[0]);
                 processLine(content);
             }
             br.close();
         } catch (Exception e){
-            System.err.println(e.getMessage()); // handle exception
+            System.err.println(e.getMessage());
 
         }
     }
 
+    /**
+     * Processes each array of words depending on the first word,
+     * Assigns the following information to the correct place in the system
+     * @param words array of tokens
+     */
     public void processLine(String[] words){
         switch (words[0]){
             case "SUPPLIER":
@@ -42,7 +56,6 @@ public class Config {
 
             case "INGREDIENT":
                 server.addIngredient(words[1], words[2], server.getSupplier(words[3]), Integer.valueOf(words[4]), Integer.valueOf(words[5]));
-                //server.addDish(words[1], "It's just "+words[1],5, 1, 10);
                 break;
 
             case "DISH":
@@ -66,7 +79,7 @@ public class Config {
                 break;
 
             case "ORDER":
-                String[] dishxQuantity = words[2].split(",");
+                String[] dishxQuantity = words[2].split(",");  //splits on commas and astrix
                 Map<Dish, Number> basket = new HashMap<>();
                 for(String item : dishxQuantity){
                     String[] splitItems = item.split(" \\* ");
@@ -76,7 +89,6 @@ public class Config {
                 break;
 
             case "STOCK":
-                //System.out.println("stock");
                 if(server.getDish(words[1]) != null)
                     server.setStock(server.getDish(words[1]), Integer.valueOf(words[2]));
                 else
@@ -84,17 +96,15 @@ public class Config {
                 break;
 
             case "STAFF":
-                //System.out.println("staff");
                 server.addStaff(words[1]);
                 break;
 
             case "DRONE":
-                //System.out.println("drone");
                 server.addDrone(Integer.valueOf(words[1]));
                 break;
 
             default:
-                //System.out.println("line no recognized");
+                System.out.println("WARNING: Word no recognised in config file");
                 break;
         }
     }

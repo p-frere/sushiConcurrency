@@ -1,10 +1,11 @@
 package server;
 
 import common.*;
-
 import java.io.*;
 
-
+/**
+ *
+ */
 public class Storage implements Serializable, Runnable {
 
     Server server;

@@ -24,8 +24,7 @@ public class ClientComms implements Runnable{
             objectInputStream = new ObjectInputStream(Client.socket.getInputStream());
             while(true) {
                 Payload payload = (Payload) objectInputStream.readObject();
-                System.out.println("recived");
-                doSomething(payload);
+                unpackPayload(payload);
             }
         } catch (ClassNotFoundException | IOException e) {
             e.printStackTrace();
@@ -33,8 +32,13 @@ public class ClientComms implements Runnable{
 
     }
 
-    public void doSomething(Payload payload){
-        System.out.println("received payload");
+    /**
+     * Unpacks the payload received and determines
+     * behaviour by reading on the transaction type
+     * @param payload package received
+     */
+    private void unpackPayload(Payload payload){
+        System.out.println("received payload <-");
 
         switch (payload.getTransactionType()){
             case updateInfo:
@@ -50,13 +54,13 @@ public class ClientComms implements Runnable{
             case deliverOrder:
                 Order incomingOrder =(Order) payload.getObject();
                 for(Order order : client.getOrders(incomingOrder.getUser())){
-                    if(order.getOrderID() == incomingOrder.getOrderID()){
+                    if(order.getOrderID().equals(incomingOrder.getOrderID())){
                         order.setStatus(OrderStatus.COMPLETE);
                     }
                 }
                 break;
             default:
-                System.out.println("unknown request");
+                System.out.println("WARNING: unknown request, no action taken");
                 break;
         }
     }

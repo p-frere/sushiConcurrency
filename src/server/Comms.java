@@ -6,9 +6,12 @@ import java.net.Socket;
 
 /**
  * Listens for new incoming connections from clients
+ * If found the new client is assign a newly created thread
  */
 public class Comms extends Thread{
     Server server;
+
+    //Constructor
     public Comms(Server server) {
         this.server = server;
     }

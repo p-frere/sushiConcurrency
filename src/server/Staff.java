@@ -7,8 +7,7 @@ import common.*;
 
 /**
  * Represents a member of the kitchen staff
- * monitors the stock levels of dishes, should any fall below their
- * restocking levels and there are sufficient ingredients to
+ * Tries to take dishes out of the restock queue when available when there are sufficient ingredients to
  satisfy the recipe of the dish, the staff member should prepare a new dish
  */
 public class Staff extends Model implements Runnable, Serializable {
@@ -20,7 +19,7 @@ public class Staff extends Model implements Runnable, Serializable {
     //Constructor
     public Staff(String name, Server server){
         setName(name);
-        status = StaffStatus.IDLE;
+        setStatus(StaffStatus.IDLE);
         this.server = server;
         this.dishStock = server.getDishStock();
         this.ingredientsStock = server.getIngredientsStock();
@@ -50,6 +49,7 @@ public class Staff extends Model implements Runnable, Serializable {
                     }
                     //when the recipe matches the ingredients that have been obtained, cook the dish
                     if(recipe.equals(obtained)){
+                        setStatus(StaffStatus.COOKING);
                         getCookin(dish);
                         dishMade = true;
                     }
@@ -63,7 +63,6 @@ public class Staff extends Model implements Runnable, Serializable {
      * @param dish
      */
     public void getCookin(Dish dish) {
-        setStatus(StaffStatus.COOKING);
         Random rand = new Random();
         try {
             System.out.println(getName() + ": cooking");
@@ -77,6 +76,10 @@ public class Staff extends Model implements Runnable, Serializable {
        setStatus(StaffStatus.IDLE);
     }
 
+    /**
+     * Updates the status of the staff's job
+     * @param status aka current job
+     */
     public void setStatus(StaffStatus status) {
         this.status = status;
         notifyUpdate();

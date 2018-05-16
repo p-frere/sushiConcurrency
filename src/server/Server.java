@@ -3,20 +3,20 @@ package server;
 import common.*;
 
 import java.io.FileNotFoundException;
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * The server coordinates and allows communication between all classes
+ * on the server side. It manages the running and organisation of them all
+ * being the central class for the manufacturing of sushi
  */
 public class Server implements ServerInterface {
     private boolean restockingIngredientsEnabled;
     private boolean restockingDishesEnabled;
 
     //List of all available resources
-    //Do not represent actual items, more like an index
     private List<Drone> drones;
     private List<Staff> staffs;
     private List<Order> allOrders;
@@ -24,16 +24,14 @@ public class Server implements ServerInterface {
     private List<User> users;
     private List<Supplier> suppliers;
 
-
     private Authenticate authenticate;
     private Config config;
     private DishStock dishStock;
     private IngredientsStock ingredientsStock;
     private OrderManager orderManager;
-    private Update update;
     private Storage storage;
     private boolean setUpComplete;
-    private UpdateListener listener;
+    private ArrayList<UpdateListener> listeners;
 
     public static final int PORT = 4444;
     private List<ServerComms> userThreads;
@@ -49,6 +47,7 @@ public class Server implements ServerInterface {
         postcodes = new ArrayList<>();
         users = new ArrayList<>();
         suppliers = new ArrayList<>();
+        listeners = new ArrayList<>();
 
         dishStock = new DishStock(this);
         ingredientsStock = new IngredientsStock(this);
@@ -59,6 +58,7 @@ public class Server implements ServerInterface {
         config = new Config(this);
         storage = new Storage(this);
 
+        //recovers last session from storage
         //storage.recover();
 
         //import settings for testing
@@ -73,6 +73,7 @@ public class Server implements ServerInterface {
         userThreads = new ArrayList<>();
         initSocket();
 
+        //Threads started
         Thread isThrd = new Thread(ingredientsStock);
         isThrd.start();
 
@@ -108,6 +109,11 @@ public class Server implements ServerInterface {
 
 
     //---------------File Saves-------------------------------------
+
+    /**
+     * Saves the current state of the information
+     * stored in the system
+     */
     public void save(){
         storage.save();
     }
@@ -137,16 +143,21 @@ public class Server implements ServerInterface {
         ingredientsStock.setStock(new ConcurrentHashMap<>());
         ingredientsStock.setRestock(new HashSet<>());
         authenticate.setUsers(new HashMap<>());
-
-
     }
 
     //-----------------Communication--------------------------------
+
+    /**
+     * Creates a new Comms thread which searches for new clients
+     */
     public void initSocket() {
         new Thread(new Comms(this)).start();
     }
 
-    //sends to all users
+    /**
+     * Sends a payload out to all users
+     * @param payload
+     */
     public void sendToAll(Payload payload) {
         System.out.println("send to all");
         //for all threads, send the message back
@@ -156,6 +167,11 @@ public class Server implements ServerInterface {
 
     }
 
+    /**
+     * sends a payloud to one specific user
+     * @param user user object
+     * @param payload payload object
+     */
     public void sendToUser(User user, Payload payload) {
         System.out.println("send to user");
         if(user.getThreadID() == null){
@@ -165,10 +181,21 @@ public class Server implements ServerInterface {
         userThreads.get(user.getThreadID()).sendMessage(payload);
     }
 
+    /**
+     * Calls the creation and returns an update object
+     * which contains information to update the client
+     * and can be sent to them
+     * @return
+     */
     public Update getUpdate() {
         return new Update(getDishes(), postcodes);
     }
 
+    /**
+     * Adds a new thread to communicate to a user with
+     * @param sc ServerComms
+     * @return the index of the thread
+     */
     public Integer addUserThread(ServerComms sc){
         userThreads.add(sc);
         return userThreads.indexOf(sc);
@@ -188,38 +215,32 @@ public class Server implements ServerInterface {
      * @param sc Server Comms
      * @return Integer ID
      */
-    public Integer getID(ServerComms sc){
+    public Integer getID(ServerComms sc){ //TODO not being used
         return userThreads.indexOf(sc);
     }
 
     //---------------------Dish--------------------------
-    @Override
-    public List<Dish> getDishes() {
-        return dishStock.getDishes();
-    }
-
-    public Dish getDish(String name){
-        for(Dish dish : getDishes()){
-            if (dish.getName().equals(name)){
-                return dish;
-            }
-        }
-        System.out.println("dish requested doesn't exist");
-        return null;
-    }
 
     @Override
     public Dish addDish(String name, String description, Number price, Number restockThreshold, Number restockAmount) {
         Dish dish = new Dish(name, description, price.intValue(), restockThreshold.intValue(), restockAmount.intValue());
         dish.setRecipe(new HashMap<>());
         dishStock.addStock(dish, 0);
+        notifyUpdate();
 
         //sends the updated dish menu to the client
-        if (setUpComplete)
+        if (setUpComplete) {
             sendToAll(new Payload(getUpdate(), TransactionType.updateInfo));
+        }
         return dish;
     }
 
+    /**
+     * Adds a Dish to the dish stock and makes the ingredients it uses
+     * instances of objects used in the server
+     * @param dish
+     * @return
+     */
     public Dish addDish(Dish dish) {
         Map<Ingredient,Number> newRecipe = new HashMap<>();
         for(Ingredient ingredient : dish.getRecipe().keySet()){
@@ -227,18 +248,19 @@ public class Server implements ServerInterface {
         }
         dish.setRecipe(newRecipe);
         dishStock.addStock(dish, 0);
+        notifyUpdate();
         return dish;
     }
 
     @Override
     public void removeDish(Dish dish) throws UnableToDeleteException {
         dishStock.removeStock(dish);
-
+        notifyUpdate();
         //sends the updated dish menu to the client
-        if (setUpComplete)
+        if (setUpComplete) {
             sendToAll(new Payload(getUpdate(), TransactionType.updateInfo));
+        }
     }
-
     @Override
     public void addIngredientToDish(Dish dish, Ingredient ingredient, Number quantity) {
         dish.addIngredient(ingredient, (Integer)quantity);
@@ -249,6 +271,7 @@ public class Server implements ServerInterface {
         dish.removeIngredient(ingredient);
     }
 
+    //getts and setts
     @Override
     public void setRecipe(Dish dish, Map<Ingredient, Number> recipe) {
         dish.setRecipe(recipe);
@@ -279,12 +302,22 @@ public class Server implements ServerInterface {
         return dishStock.getStock();
     }
 
-    //-----------------Ingredient-------------------------------
     @Override
-    public List<Ingredient> getIngredients() {
-        return ingredientsStock.getIngredients();
+    public List<Dish> getDishes() {
+        return dishStock.getDishes();
     }
 
+    public Dish getDish(String name){
+        for(Dish dish : getDishes()){
+            if (dish.getName().equals(name)){
+                return dish;
+            }
+        }
+        System.out.println("dish requested doesn't exist = " + name);
+        return null;
+    }
+
+    //-----------------Ingredient-------------------------------
     @Override
     public Ingredient addIngredient(String name, String unit, Supplier supplier, Number restockThreshold, Number restockAmount) {
         Ingredient ingredient = new Ingredient(name, unit, supplier, (Integer)restockThreshold, (Integer)restockAmount);
@@ -292,26 +325,24 @@ public class Server implements ServerInterface {
         return ingredient;
     }
 
+    /**
+     * Adds an already existing ingredient and by getting it the
+     * servers instance of supplier and adding it to stock
+     * @param ingredient
+     */
     public void addIngredient(Ingredient ingredient) {
         ingredient.setSupplier(getSupplier(ingredient.getSupplier().getName()));
         ingredientsStock.addStock(ingredient, 0);
-    }
-
-    public Ingredient getIngredient(String ingredientName){
-        for(Ingredient item : ingredientsStock.getIngredients()){
-            if(item.getName().equals(ingredientName)){
-                return item;
-            }
-        }
-        System.out.println("Ingredient needed doesn't exist");
-        return null;
+        notifyUpdate();
     }
 
     @Override
     public void removeIngredient(Ingredient ingredient) throws UnableToDeleteException {
         ingredientsStock.removeStock(ingredient);
+        notifyUpdate();
     }
 
+    //Gets and Sets
     @Override
     public void setRestockLevels(Ingredient ingredient, Number restockThreshold, Number restockAmount) {
         ingredient.setRestock((Integer)restockThreshold, (Integer)restockAmount);
@@ -332,7 +363,38 @@ public class Server implements ServerInterface {
         return ingredientsStock.getStockLevels();
     }
 
+    @Override
+    public List<Ingredient> getIngredients() {
+        return ingredientsStock.getIngredients();
+    }
+
+    public Ingredient getIngredient(String ingredientName){
+        for(Ingredient item : ingredientsStock.getIngredients()){
+            if(item.getName().equals(ingredientName)){
+                return item;
+            }
+        }
+        System.out.println("WARNING: Ingredient needed doesn't exist");
+        return null;
+    }
+
+
     //---------------Supplier-------------------------------
+    @Override
+    public Supplier addSupplier(String name, Number distance) {
+        Supplier supplier = new Supplier(name, distance.intValue());
+        suppliers.add(supplier);
+        notifyUpdate();
+        return supplier;
+    }
+
+    @Override
+    public void removeSupplier(Supplier supplier) throws UnableToDeleteException {
+        suppliers.remove(supplier);
+        notifyUpdate();
+    }
+
+    //Gets and Sets
     @Override
     public List<Supplier> getSuppliers() {
         return suppliers;
@@ -353,18 +415,6 @@ public class Server implements ServerInterface {
     }
 
     @Override
-    public Supplier addSupplier(String name, Number distance) {
-        Supplier supplier = new Supplier(name, distance.intValue());
-        suppliers.add(supplier);
-        return supplier;
-    }
-
-    @Override
-    public void removeSupplier(Supplier supplier) throws UnableToDeleteException {
-        suppliers.remove(supplier);
-    }
-
-    @Override
     public Number getSupplierDistance(Supplier supplier) {
         return supplier.getDistance();
     }
@@ -379,12 +429,14 @@ public class Server implements ServerInterface {
     public Drone addDrone(Number speed) {
         Drone drone = new Drone((Integer)speed, this);
         drones.add(drone);
+        notifyUpdate();
         return drone;
     }
 
     @Override
     public void removeDrone(Drone drone) throws UnableToDeleteException {
         drones.remove(drone);
+        notifyUpdate();
     }
 
     @Override
@@ -407,14 +459,14 @@ public class Server implements ServerInterface {
     public Staff addStaff(String name) {
         Staff staff = new Staff(name, this);
         staffs.add(staff);
+        notifyUpdate();
         return staff;
     }
 
     @Override
     public void removeStaff(Staff staff) throws UnableToDeleteException {
         staffs.remove(staff);
-        //will this work?
-        //like drones
+        notifyUpdate();
     }
 
     @Override
@@ -424,29 +476,30 @@ public class Server implements ServerInterface {
 
     //-------------Order--------------------
     @Override
-    public List<Order> getOrders() {
-        return allOrders;
-    }
-
-    @Override
     public void removeOrder(Order order) {
         order = getOrder(order);
-        orderManager.cancelOrder(order);  //removes from servers persistant list
+        orderManager.removeOrder(order);  //removes from servers persistant list
         allOrders.remove(order);
+        notifyUpdate();
     }
 
+    /**
+     * sets an order to canceled than attempts to remove it
+     * @param order
+     */
+    public void cancelOrder(Order order) {
+        order.setStatus(OrderStatus.CANCELED);
+        removeOrder(order);
+    }
+
+    /**
+     * Adds and order to the list of orders
+     * as well as adding it to the order manager.
+     * The dishes in the basket must be reinitialized
+     * To the ones the server uses
+     * @param order order object
+     */
     public void addOrder(Order order){
-
-        System.out.println();
-        for(Map.Entry<Dish, Number> entry : order.getBasket().entrySet()) {
-            Dish dish = entry.getKey();
-            Number value = entry.getValue();
-
-            System.out.println(dish.getName() + " x" + value);
-
-        }
-
-        System.out.println();
         Map<Dish, Number> newBasket = new HashMap<>();
 
         for (Dish dish : order.getBasket().keySet()){
@@ -455,30 +508,26 @@ public class Server implements ServerInterface {
         order.setBasket(newBasket);
         order.setUser(getUSer(order.getUser().getName()));
         order.getUser().addOrder(order);
-
-        System.out.println();
-        for(Map.Entry<Dish, Number> entry : order.getBasket().entrySet()) {
-            Dish dish = entry.getKey();
-            Number value = entry.getValue();
-
-            System.out.println(dish.getName() + " x" + value);
-
-        }
-        System.out.println();
-
         allOrders.add(order);
         orderManager.addOrder(order);
+
+        notifyUpdate();
     }
 
+    //getters and setters
     public Order getOrder(Order newOrder){
         for (Order order : allOrders){
-            if (order.getBasket().equals(newOrder)){
+            if (order.getBasket().equals(newOrder.getBasket())){
                 return order;
             }
         }
         return null;
     }
 
+    @Override
+    public List<Order> getOrders() {
+        return allOrders;
+    }
     @Override
     public Number getOrderDistance(Order order) {
         return order.getOrderDistance();
@@ -500,6 +549,42 @@ public class Server implements ServerInterface {
     }
 
     //-------------Postcode--------------------------
+
+    @Override
+    public void addPostcode(String code, Number distance) {
+        postcodes.add(new Postcode(code, (Integer) distance));
+        notifyUpdate();
+    }
+
+    /**
+     * Returns the postcode object for a string code
+     * @param code string of the postcode
+     * @return postcode
+     */
+    public Postcode getPostcode(String code){
+        for (Postcode postcode : postcodes){
+            if(postcode.getPostcode().equals(code)){
+                return postcode;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Removes a postcode from the stored list
+     * @param postcode postcode to remove
+     * @throws UnableToDeleteException
+     */
+    @Override
+    public void removePostcode(Postcode postcode) throws UnableToDeleteException {
+        postcodes.remove(postcode);
+        if (postcodes.contains(postcode)){
+            throw new UnableToDeleteException("Unable to delete postcode");
+        }
+        notifyUpdate();
+    }
+
+    //Setters and getters
     @Override
     public List<Postcode> getPostcodes() {
         return postcodes;
@@ -509,36 +594,7 @@ public class Server implements ServerInterface {
         this.postcodes = postcodes;
     }
 
-    @Override
-    public void addPostcode(String code, Number distance) {
-        postcodes.add(new Postcode(code, (Integer) distance));
-    }
-
-    public Postcode getPostcode(String code){
-        for (Postcode postcode : postcodes){
-            if(postcode.getPostcode().equals(code)){
-                return postcode;
-            }
-        }
-        System.out.println("postcode not found");
-        return null;
-    }
-
-    @Override
-    public void removePostcode(Postcode postcode) throws UnableToDeleteException {
-        postcodes.remove(postcode);
-    }
-
     //-------------Users------------------------------
-
-    /**
-     * Returns all the users registered within the system
-     * @return
-     */
-    @Override
-    public List<User> getUsers() {
-        return users;
-    }
 
     /**
      * Removes a user from the system
@@ -549,6 +605,10 @@ public class Server implements ServerInterface {
     public void removeUser(User user) throws UnableToDeleteException {
         users.remove(user);
         authenticate.removeUser(user.getName());
+        if (users.contains(user)){
+            throw new UnableToDeleteException("Unable to delete user");
+        }
+        notifyUpdate();
     }
 
     /**
@@ -579,6 +639,7 @@ public class Server implements ServerInterface {
      */
     public void addToUserList(User user){
         users.add(user);
+        notifyUpdate();
     }
 
     /**
@@ -599,11 +660,8 @@ public class Server implements ServerInterface {
         return authenticate.register(user.getUserName(), user);
     }
 
-    /**
-     * Returns the user assigned to a thread
-     * @param ID int
-     * @return user
-     */
+
+    //Getters and Setters
     public User getUser(Integer ID){
         for(User user : users){
             if(user.getThreadID() == ID){
@@ -613,11 +671,6 @@ public class Server implements ServerInterface {
         return null;
     }
 
-    /**
-     * Returns a User for the given username
-     * @param username string
-     * @return user
-     */
     public User getUSer(String username){
         for (User user : users){
             if(user.getName().equals(username)){
@@ -628,8 +681,15 @@ public class Server implements ServerInterface {
         return null;
     }
 
+    @Override
+    public List<User> getUsers() {
+        return users;
+    }
+
+
     //---------Stocks and Managers----------------------
 
+    //getters and setters
     @Override
     public void setStock(Dish dish, Number stock) {
         dishStock.addStock(dish,(Integer) stock);
@@ -655,13 +715,17 @@ public class Server implements ServerInterface {
     //---------------------------------------------------------------
 
 
-    @Override
-    public void addUpdateListener(UpdateListener listener) {
-        this.listener = listener;
-    }
+        @Override
+        public void addUpdateListener(UpdateListener listener) {
+            listeners.add(listener);
+        }
 
-    @Override
-    public void notifyUpdate() {
-        listener.updated(new UpdateEvent());
-    }
+        @Override
+        public void notifyUpdate() {
+            if (setUpComplete) {
+                for(UpdateListener listener : listeners) {
+                    listener.updated(new UpdateEvent());
+                }
+            }
+        }
 }

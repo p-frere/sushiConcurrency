@@ -100,9 +100,9 @@ public class ServerComms extends Thread {
                 break;
             case requestCancel:
                 Order toCancel = (Order)payload.getObject();
-                server.removeOrder(toCancel);
+                server.cancelOrder(server.getOrder(toCancel));
             default:
-                System.out.println("unknown request");
+                System.out.println("WARNING: unknown request, no action taken");
                 break;
         }
 

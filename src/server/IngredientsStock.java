@@ -9,6 +9,9 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Stores and manages all the ingredients
  * It maintains info on the stock and a queue of ingredients needed that drones can query
+ *
+ * Each item stored has an threshold for quantity which it aims to be at consistently
+ * If an item is removed this class will request another to be made to take it's place.
  */
 public class IngredientsStock implements Runnable{
     private Map<Ingredient, Number> stock;

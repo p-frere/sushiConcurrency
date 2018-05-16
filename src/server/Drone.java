@@ -3,11 +3,12 @@ package server;
 import common.*;
 
 /**
-* A drone monitors stock levels of ingredients.
-* When these drop below their restocking levels,
-* it collects further ingredients from the appropriate supplier.
-* The time it takes for this dependa on its speed and the distance to the supplier.
-* When it is not collecting stocks, a drone can also deliver customer orders.
+* A drone monitors the ingredients that need to be restocked.
+* When it can, it collects further ingredients from the appropriate supplier.
+* The time it takes for this depends on its speed and the distance to the supplier.
+*
+ * When it is not collecting stocks, a drone can also deliver customer orders.
+ * This also has a dependant time.
  */
 public class Drone extends Model implements Runnable {
     private Integer speed;
@@ -18,7 +19,7 @@ public class Drone extends Model implements Runnable {
 
     public Drone(Integer speed, Server server){
         this.speed = speed;
-        status = DroneStatus.IDLE;
+        status = DroneStatus.IDLE;  //signals the drones current job
         setName("droneSpeed"+speed);
         ingredientsStock = server.getIngredientsStock();
         orderManager =  server.getOrderManager();
@@ -50,10 +51,10 @@ public class Drone extends Model implements Runnable {
      * @param order
      */
     public void deliver(Order order){
-        status = DroneStatus.DELIVERING;
+        setStatus(DroneStatus.DELIVERING);
         try {
             //represents delivery time
-            Thread.sleep(3000); //(order.getUser().getPostCode().getDistance() / speed) * 7000);
+            Thread.sleep(3000 + (order.getUser().getPostCode().getDistance() / speed));
             order.setStatus(OrderStatus.COMPLETE);
             //send order to client
             server.sendToUser(order.getUser(), new Payload(order, TransactionType.deliverOrder));
@@ -61,9 +62,8 @@ public class Drone extends Model implements Runnable {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        status = DroneStatus.IDLE;
+        setStatus(DroneStatus.IDLE);
     }
-
 
     /**
      * recovers ingredients from supplier
@@ -71,16 +71,21 @@ public class Drone extends Model implements Runnable {
      */
     private void recover(Ingredient ingredient){
         System.out.println(name + ": recovering " + ingredient.getName());
-        status = DroneStatus.RECOVERING;
+        setStatus(DroneStatus.RECOVERING);
         try {
             //represents recovery time
-            Thread.sleep(3000); //(long)(ingredient.getSupplier().getDistance() / speed) * 7000);
+            Thread.sleep(3000 + (long)(ingredient.getSupplier().getDistance() / speed));
             ingredientsStock.addStock(ingredient, ingredient.getRestockAmount());
-            status = DroneStatus.IDLE;
+            setStatus(DroneStatus.IDLE);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
+    }
+
+    private void setStatus(DroneStatus status){
+        this.status = status;
+        notifyUpdate();
     }
 
     //setta and getta

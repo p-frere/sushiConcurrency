@@ -75,7 +75,7 @@ public class OrderManager implements Runnable{
      * Checks through both queue for an order to remove
      * @param order
      */
-    public void cancelOrder(Order order){
+    public void removeOrder(Order order){
         for(Iterator<Order> it = incomingOrders.iterator(); it.hasNext();){
             if (it.next() == order){
                 it.remove();

@@ -17,23 +17,21 @@ public class Client implements ClientInterface {
 
     private List<Postcode> postcodes;
     private List<Dish> dishes;
-    //private Map<Dish, Number> basket;
-    //private List<Order> orders;
-    private UpdateListener listener;
+    private List<UpdateListener> listeners;
     boolean setUpComplete;
-
     public static Socket socket;
-    ObjectOutputStream objectOutputStream;
+    private ObjectOutputStream objectOutputStream;
 
+    //constructor
     public Client(){
         setUpComplete = false;
+        listeners = new ArrayList<>();
         postcodes = new ArrayList<>();
-        //basket = new HashMap<>();
-        //orders = new ArrayList<>();
         dishes = new ArrayList<>();
 
         synchronized (this) {
             initSocket();
+            //creates a time out
             try {
                 wait(5000);
             } catch (InterruptedException e) {
@@ -50,6 +48,10 @@ public class Client implements ClientInterface {
 
     //-----------Comms---------------------
 
+    /**
+     * Starts the socket that will allow communication
+     * between the server and the client
+     */
     public void initSocket()  {
         try {
             socket = new Socket("localhost", 4444);
@@ -57,23 +59,31 @@ public class Client implements ClientInterface {
             objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             new Thread(new ClientComms(this)).start();
         } catch (IOException e) {
-            //e.printStackTrace();
             System.out.println("Cannot connect to Server");
         }
     }
 
-    // sends submitted text to server
+    /**
+     * Submits text to the serer
+     * @param payload a collection of classes
+     */
     public void send(Payload payload) {
         try {
             objectOutputStream.writeObject(payload);
-            objectOutputStream  .reset();
-            System.out.println("Sent message");
+            objectOutputStream.reset();
+            System.out.println("Sent message ->");
         } catch (IOException e) {
             System.out.println("error in print stream");
             e.printStackTrace();
         }
     }
 
+    /**
+     * Updates the dishes and the post codes
+     * to newly delivered ones
+     * @param dishes list of dishes
+     * @param postcodes list of postcodes
+     */
     public void updateInfo(List<Dish> dishes, List<Postcode> postcodes) {
         synchronized (this) {
             this.dishes = dishes;
@@ -113,19 +123,20 @@ public class Client implements ClientInterface {
 
         synchronized (this) {
             System.out.println("login waiting...");
-
             try {
                 wait();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-
             System.out.println("...login finished waiting");
         }
-
         return user;
     }
 
+    /**
+     * Sets the client window for a delivered user
+     * @param user
+     */
     public void setUser(User user){
         synchronized (this) {
             this.user = user;
@@ -191,7 +202,6 @@ public class Client implements ClientInterface {
         Order newOrder = new Order(user, user.getBasket());
         user.addOrder(newOrder);
         clearBasket(user);
-        print(newOrder.getBasket());
         send(new Payload(newOrder, TransactionType.requestOrder));
         return newOrder;
     }
@@ -235,24 +245,13 @@ public class Client implements ClientInterface {
 
     @Override
     public void addUpdateListener(UpdateListener listener) {
-        this.listener = listener;
+        listeners.add(listener);
     }
 
     @Override
     public void notifyUpdate() {
-        listener.updated(new UpdateEvent());
-    }
-
-    //todo remove
-    public void print(Map<Dish, Number> map){
-        System.out.println();
-        for(Map.Entry<Dish, Number> entry : map.entrySet()) {
-            Dish dish = entry.getKey();
-            Number value = entry.getValue();
-
-            System.out.println(dish.getName() + " x" + value);
-
+        for(UpdateListener listener : listeners) {
+            listener.updated(new UpdateEvent());
         }
-        System.out.println();
     }
 }

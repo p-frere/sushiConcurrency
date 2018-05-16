@@ -4,11 +4,19 @@ import common.Dish;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Stores and manages all the dishes
+ * It maintains info on the stock and a queue of dish needed that drones can query.
+ *
+ * Each item stored has an threshold for quantity which it aims to be at consistently
+ * If an item is removed this class will request another to be made to take it's place.
+ */
 public class DishStock implements Runnable{
     private Map<Dish, Number> stock;
     private Set<Dish> restock;
     private Server server;
 
+    //Constructor
     public DishStock(Server server){
         this.server = server;
         stock = new ConcurrentHashMap<>();  //lists stocks of dishes
@@ -58,7 +66,8 @@ public class DishStock implements Runnable{
 
     /**
      * checks if restock needed by checking if any
-     * item has less than the restock amount
+     * item has less than the restock amount,
+     * If it is, the item is added to the restock pile
      */
     public void checkStock(){
         Iterator it = stock.entrySet().iterator();
@@ -86,7 +95,7 @@ public class DishStock implements Runnable{
      * If a dish can be taken the dish is returned
      * else null is returned.
      * The dish can also not be returned if it has been returned
-     * to a diffrent call to stop duplicate cooking
+     * to a different call to stop duplicate cooking
      * @return dish
      */
     public synchronized Dish takeFromRestockQueue(){
@@ -111,7 +120,7 @@ public class DishStock implements Runnable{
      */
     public void removeStock(Dish dish){
         stock.remove(dish);
-        //todo unable to delete exception
+        //TODO throw exeption
     }
 
     //Getters and Setters
