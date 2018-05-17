@@ -197,10 +197,11 @@ public class Client implements ClientInterface {
         user.updateBasket(dish, quantity);
     }
 
+    //aka new order
     @Override
     public Order checkoutBasket(User user) {
         Order newOrder = new Order(user, user.getBasket());
-        user.addOrder(newOrder);
+        user.addOrder(newOrder, true);
         clearBasket(user);
         send(new Payload(newOrder, TransactionType.requestOrder));
         return newOrder;
@@ -237,6 +238,7 @@ public class Client implements ClientInterface {
     public void cancelOrder(Order order) {
         System.out.println("request to cancel");
         order.setStatus(OrderStatus.CANCELED);
+        System.out.println(order.getOrderID());
         send(new Payload(order, TransactionType.requestCancel));
     }
 

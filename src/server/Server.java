@@ -59,7 +59,7 @@ public class Server implements ServerInterface {
         storage = new Storage(this);
 
         //recovers last session from storage
-        //storage.recover();
+        storage.recover();
 
         //import settings for testing
         //todo remove later
@@ -93,8 +93,6 @@ public class Server implements ServerInterface {
         new Thread(new OrderBuilder(this)).start();
 
         setUpComplete = true;
-        //storage.save();
-
     }
 
     @Override
@@ -112,7 +110,8 @@ public class Server implements ServerInterface {
 
     /**
      * Saves the current state of the information
-     * stored in the system
+     * stored in the system,
+     * set to save after each order completion
      */
     public void save(){
         storage.save();
@@ -477,7 +476,7 @@ public class Server implements ServerInterface {
     //-------------Order--------------------
     @Override
     public void removeOrder(Order order) {
-        order = getOrder(order);
+        //order = getOrder(order);
         orderManager.removeOrder(order);  //removes from servers persistant list
         allOrders.remove(order);
         notifyUpdate();
@@ -488,6 +487,7 @@ public class Server implements ServerInterface {
      * @param order
      */
     public void cancelOrder(Order order) {
+        order = getOrder(order);
         order.setStatus(OrderStatus.CANCELED);
         removeOrder(order);
     }
@@ -507,7 +507,7 @@ public class Server implements ServerInterface {
         }
         order.setBasket(newBasket);
         order.setUser(getUSer(order.getUser().getName()));
-        order.getUser().addOrder(order);
+        order.getUser().addOrder(order, false);
         allOrders.add(order);
         orderManager.addOrder(order);
 
@@ -517,8 +517,10 @@ public class Server implements ServerInterface {
     //getters and setters
     public Order getOrder(Order newOrder){
         for (Order order : allOrders){
-            if (order.getBasket().equals(newOrder.getBasket())){
-                return order;
+            if(order.getOrderID() != null) {
+                if (order.getOrderID().equals(newOrder.getOrderID())) {
+                    return order;
+                }
             }
         }
         return null;

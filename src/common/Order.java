@@ -10,7 +10,7 @@ public class Order extends Model {
     private User user;
     private OrderStatus status;
     private Map<Dish, Number> basket;   //the dishes and their amounts
-    private Integer orderID;
+    private Integer orderID;            //A randomly assigned identifier that helps locate the correct order in the server
 
     //Constructor
     public Order(User customer, Map<Dish, Number> basket) {

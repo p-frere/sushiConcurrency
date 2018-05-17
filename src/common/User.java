@@ -1,10 +1,7 @@
 package common;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * /**
@@ -76,9 +73,11 @@ public class User extends Model implements Serializable {
         this.orders = orders;
     }
 
-    public void addOrder(Order order){
+    public void addOrder(Order order, boolean createNew){
         orders.add(order);
-        order.setOrderID(orders.indexOf(order));
+        if (createNew) {
+            order.setOrderID(new Random().nextInt(900000));
+        }
     }
 
     public Map<Dish, Number> getBasket() {
