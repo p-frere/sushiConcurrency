@@ -55,7 +55,9 @@ public class ServerComms extends Thread {
             System.out.println("client has disconnected");
             server.removeUserThread(this);
             //removes the thread reference from the user
-            server.getUser(ID).setThreadID(null);
+            if(server.getUser(ID) != null) {
+                server.getUser(ID).setThreadID(null);
+            }
         }
     }
 

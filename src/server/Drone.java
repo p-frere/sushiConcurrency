@@ -32,6 +32,13 @@ public class Drone extends Model implements Runnable {
         Order order;
 
         while (true) {
+            try {
+                //checks every 10th of a second
+                //This avoid strain on the computer
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             //gets an item from a restock queue to restock
             ingredient = ingredientsStock.takeFromRestockQueue();
             if (ingredient != null){

@@ -28,6 +28,13 @@ public class IngredientsStock implements Runnable{
     @Override
     public void run() {
         while(true) {
+            //checks every 10th of a second
+            //This avoid strain on the computer
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             checkStock();
         }
     }
@@ -47,7 +54,13 @@ public class IngredientsStock implements Runnable{
         ingredient.setFetching(false);
     }
 
-
+    /**
+     * Takes stoke from the store one ingredient at a time
+     * removes a ingredient and returns true if ingredient can be taken
+     * returns false if not
+     * @param ingredient item taken
+     * @return flag if successful
+     */
     public synchronized boolean takeStock(Ingredient ingredient){
         if(stock.get(ingredient).intValue() > 0) {
             stock.put(ingredient, stock.get(ingredient).intValue() - 1); //takes ingredient
@@ -57,8 +70,12 @@ public class IngredientsStock implements Runnable{
         }
     }
 
-        //checks if restock is needed
-    public synchronized void checkStock(){
+    /**
+     * checks if restock needed by checking if any
+     * item has less than the restock amount,
+     * If it is, the item is added to the restock pile
+     */
+    private synchronized void checkStock(){
         Iterator it = stock.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<Ingredient, Integer> pair = (Map.Entry)it.next();
@@ -70,7 +87,12 @@ public class IngredientsStock implements Runnable{
         }
     }
 
-    public synchronized void addToRestockQueue(Ingredient item){
+    /**
+     * A needed ingredient is added to restock,
+     * This is a set so a ingredient can only be requested once per time
+     * @param item ingredient required
+     */
+    private synchronized void addToRestockQueue(Ingredient item){
         restock.add(item);
     }
 
@@ -81,17 +103,22 @@ public class IngredientsStock implements Runnable{
             ingredient = (Ingredient)iter.next();
             if (!ingredient.isFetching()){
                 //if it hasn't been fetched yet
+                ingredient.setFetching(true);
                 return ingredient;
             }
         }
-        //nothing to be taken atm
         return null;
     }
 
-
-    public synchronized void removeStock(Ingredient ingredient){
+    /**
+     * Removes the specified dish from the system
+     * @param ingredient
+     */
+    public synchronized void removeStock(Ingredient ingredient) throws ServerInterface.UnableToDeleteException {
         stock.remove(ingredient);
-        //todo unable to delete exception
+        if (stock.containsKey(ingredient)){
+            throw new ServerInterface.UnableToDeleteException("cannot remove ingredient");
+        }
     }
 
     //getters and setters

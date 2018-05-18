@@ -36,6 +36,7 @@ public class Server implements ServerInterface {
     public static final int PORT = 4444;
     private List<ServerComms> userThreads;
 
+    //Constructor
     public Server(){
         setUpComplete = false;
         //init
@@ -61,14 +62,6 @@ public class Server implements ServerInterface {
         //recovers last session from storage
         storage.recover();
 
-        //import settings for testing
-        //todo remove later
-        try {
-            loadConfiguration("src/config.txt");
-        }catch (Exception e){
-            System.err.println(e);
-        }
-
         //server setup
         userThreads = new ArrayList<>();
         initSocket();
@@ -76,20 +69,16 @@ public class Server implements ServerInterface {
         //Threads started
         Thread isThrd = new Thread(ingredientsStock);
         isThrd.start();
-
         for (Drone drone : drones){
             new Thread(drone).start();
         }
         Thread dsThrd = new Thread(dishStock);
         dsThrd.start();
-
         for (Staff staff : staffs){
             new Thread(staff).start();
         }
-
         Thread omThrd = new Thread(orderManager);
         omThrd.start();
-
         new Thread(new OrderBuilder(this)).start();
 
         setUpComplete = true;
@@ -121,6 +110,9 @@ public class Server implements ServerInterface {
     public void loadConfiguration(String filename) throws FileNotFoundException {
         clearData();
         config.readIn(filename);
+        if (setUpComplete) {
+            sendToAll(new Payload(getUpdate(), TransactionType.updateInfo));
+        }
     }
 
     /**
@@ -149,7 +141,7 @@ public class Server implements ServerInterface {
     /**
      * Creates a new Comms thread which searches for new clients
      */
-    public void initSocket() {
+    private void initSocket() {
         new Thread(new Comms(this)).start();
     }
 
@@ -214,7 +206,7 @@ public class Server implements ServerInterface {
      * @param sc Server Comms
      * @return Integer ID
      */
-    public Integer getID(ServerComms sc){ //TODO not being used
+    public Integer getID(ServerComms sc){
         return userThreads.indexOf(sc);
     }
 
@@ -429,6 +421,9 @@ public class Server implements ServerInterface {
         Drone drone = new Drone((Integer)speed, this);
         drones.add(drone);
         notifyUpdate();
+        if(setUpComplete){
+            new Thread(drone).start();
+        }
         return drone;
     }
 
@@ -459,6 +454,9 @@ public class Server implements ServerInterface {
         Staff staff = new Staff(name, this);
         staffs.add(staff);
         notifyUpdate();
+        if(setUpComplete){
+            new Thread(staff).start();
+        }
         return staff;
     }
 
@@ -488,8 +486,10 @@ public class Server implements ServerInterface {
      */
     public void cancelOrder(Order order) {
         order = getOrder(order);
-        order.setStatus(OrderStatus.CANCELED);
-        removeOrder(order);
+        if(order != null) {
+            order.setStatus(OrderStatus.CANCELED);
+            removeOrder(order);
+        }
     }
 
     /**

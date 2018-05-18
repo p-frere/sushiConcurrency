@@ -24,6 +24,13 @@ public class OrderBuilder implements Runnable{
     @Override
     public void run() {
         while (true) {
+            //checks every 10th of a second
+            //This avoid strain on the computer
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             Order order = orderManager.takeFromIncomingOrders();
             if (order != null) {
                 System.out.println("collecting for a new order");

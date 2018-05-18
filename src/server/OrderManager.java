@@ -2,6 +2,8 @@ package server;
 
 import common.Order;
 import common.OrderStatus;
+import common.TransactionType;
+
 import java.util.Iterator;;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -31,9 +33,11 @@ public class OrderManager implements Runnable{
      * @param order
      */
     public void addOrder(Order order){
-        incomingOrders.add(order);
-        System.out.println("-- order added");
-        //order.setStatus(OrderStatus.COOKINGQUEUE);
+        if(order.getStatus() != OrderStatus.COMPLETE) {
+            incomingOrders.add(order);
+            System.out.println("-- order added");
+            order.setStatus(OrderStatus.COOKINGQUEUE);
+        }
     }
 
     /**

@@ -104,7 +104,6 @@ public class Config {
                 break;
 
             default:
-                System.out.println("WARNING: Word no recognised in config file");
                 break;
         }
     }

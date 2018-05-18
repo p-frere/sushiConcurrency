@@ -26,6 +26,14 @@ public class DishStock implements Runnable{
     @Override
     public void run() {
         while (true) {
+            //checks every 10th of a second
+            //This avoid strain on the computer
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
             checkStock();
         }
     }
@@ -57,7 +65,7 @@ public class DishStock implements Runnable{
             dish = server.getDish(dish.getName());
         }
         if(stock.get(dish).intValue() > 0) {
-            stock.put(dish, stock.get(dish).intValue() - 1); //takes ingredient
+            stock.put(dish, stock.get(dish).intValue() - 1); //takes dish
             return true;
         } else {
             return false;
@@ -69,7 +77,7 @@ public class DishStock implements Runnable{
      * item has less than the restock amount,
      * If it is, the item is added to the restock pile
      */
-    public void checkStock(){
+    private void checkStock(){
         Iterator it = stock.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<Dish, Integer> pair = (Map.Entry)it.next();
@@ -86,7 +94,7 @@ public class DishStock implements Runnable{
      * This is a set so a dish can only be requested once per time
      * @param dish item required
      */
-    public synchronized void addToRestockQueue(Dish dish){
+    private synchronized void addToRestockQueue(Dish dish){
         restock.add(dish);
 
     }
@@ -118,9 +126,11 @@ public class DishStock implements Runnable{
      * Removes stock for when you're removing a dish
      * @param dish
      */
-    public void removeStock(Dish dish){
+    public void removeStock(Dish dish) throws ServerInterface.UnableToDeleteException {
         stock.remove(dish);
-        //TODO throw exeption
+        if (stock.containsKey(dish)){
+            throw new ServerInterface.UnableToDeleteException("cannot remove dish");
+        }
     }
 
     //Getters and Setters

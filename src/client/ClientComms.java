@@ -4,12 +4,13 @@ import common.*;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.PrintStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.Scanner;
 
 public class ClientComms implements Runnable{
     Client client;
+    public static Socket socket;
+    private ObjectOutputStream objectOutputStream;
 
     public ClientComms(Client client){
         this.client = client;
@@ -21,7 +22,7 @@ public class ClientComms implements Runnable{
         ObjectInputStream objectInputStream = null;
 
         try {
-            objectInputStream = new ObjectInputStream(Client.socket.getInputStream());
+            objectInputStream = new ObjectInputStream(socket.getInputStream());
             while(true) {
                 Payload payload = (Payload) objectInputStream.readObject();
                 unpackPayload(payload);
@@ -30,6 +31,34 @@ public class ClientComms implements Runnable{
             e.printStackTrace();
         }
 
+    }
+    /**
+     * Starts the socket that will allow communication
+     * between the server and the client
+     */
+    public void initSocket()  {
+        try {
+            socket = new Socket("localhost", 4444);
+            System.out.println("init socket");
+            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+        } catch (IOException e) {
+            System.out.println("Cannot connect to Server");
+        }
+    }
+
+    /**
+     * Submits text to the serer
+     * @param payload a collection of classes
+     */
+    public void send(Payload payload) {
+        try {
+            objectOutputStream.writeObject(payload);
+            objectOutputStream.reset();
+            System.out.println("Sent message ->");
+        } catch (IOException e) {
+            System.out.println("error in print stream");
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -54,8 +83,10 @@ public class ClientComms implements Runnable{
             case deliverOrder:
                 Order incomingOrder =(Order) payload.getObject();
                 for(Order order : client.getOrders(incomingOrder.getUser())){
-                    if(order.getOrderID().equals(incomingOrder.getOrderID())){
-                        order.setStatus(OrderStatus.COMPLETE);
+                    if (order.getOrderID() != null) {
+                        if (order.getOrderID().equals(incomingOrder.getOrderID())) {
+                            order.setStatus(OrderStatus.COMPLETE);
+                        }
                     }
                 }
                 break;

@@ -9,7 +9,7 @@ import java.util.Set;
 
 /**
  * This class is populated then serialized to store a current state of the system
- * The class is then deserialized when infomation needs to be recovered
+ * The class is then deserialized when information needs to be recovered
  */
 public class SaveData implements Serializable {
     private static final long serialVersionUID = 1L;

@@ -28,7 +28,15 @@ public class Staff extends Model implements Runnable, Serializable {
     @Override
     public void run() {
 
-        while (true) { //forever, for the works are slaves and get not holidays
+        while (true) { //forever, for the works are slaves and get not
+
+            try {
+                //checks every 10th of a second
+                //This avoid strain on the computer
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
             Dish dish = dishStock.takeFromRestockQueue();
             if (dish != null) {

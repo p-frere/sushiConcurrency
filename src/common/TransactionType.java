@@ -12,8 +12,6 @@ public enum TransactionType implements Serializable {
 
     //sever sends - client receives
     replyLogin,
-    replyOrder,
     updateInfo,
     deliverOrder,
-    updateStatus
 }

@@ -24,6 +24,11 @@ public class Comms extends Thread{
             System.out.println("Listening for new clients...");
             //server listens for connections
             while (true) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 //accepts connection and creates new thread for user
                 Socket socket = null;
                 socket = serverSocket.accept();

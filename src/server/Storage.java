@@ -4,7 +4,7 @@ import common.*;
 import java.io.*;
 
 /**
- *
+ * The Storage class populates the SaveData class before it is serialized
  */
 public class Storage implements Serializable, Runnable {
 
@@ -99,7 +99,7 @@ public class Storage implements Serializable, Runnable {
             ingredientsStock.setStock(data.getIngredientStock());
             System.out.println("loaded data");
 
-            //server.sendToAll(new Payload(server.getUpdate(), TransactionType.updateInfo));
+            inputStream.close();
 
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
