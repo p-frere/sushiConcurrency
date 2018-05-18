@@ -11,6 +11,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * The Client handle the client program's backend
+ * When logged in, the application should show all available dishes.
+ * Customers can add/remove dishes to/from a shopping basket,
+ * view the current total price and place their order.
+ * They can also see the status of current and previous orders.
+ */
 public class Client implements ClientInterface {
     private ClientComms comms;
     private User user;
@@ -18,9 +25,8 @@ public class Client implements ClientInterface {
     private List<Postcode> postcodes;
     private List<Dish> dishes;
     private List<UpdateListener> listeners;
-    boolean setUpComplete;
-    public static Socket socket;
-    private ObjectOutputStream objectOutputStream;
+    private boolean setUpComplete;
+
 
     //constructor
     public Client(){
@@ -28,14 +34,15 @@ public class Client implements ClientInterface {
         listeners = new ArrayList<>();
         postcodes = new ArrayList<>();
         dishes = new ArrayList<>();
+        comms = new ClientComms(this);
+        new Thread(comms).start();
 
         synchronized (this) {
-            initSocket();
+            comms.initSocket();
             //creates a time out
             try {
                 wait(5000);
             } catch (InterruptedException e) {
-                //e.printStackTrace();
             }
         }
 
@@ -43,40 +50,9 @@ public class Client implements ClientInterface {
             System.out.println(postcode.getName());
 
         setUpComplete = true;
-
     }
 
     //-----------Comms---------------------
-
-    /**
-     * Starts the socket that will allow communication
-     * between the server and the client
-     */
-    public void initSocket()  {
-        try {
-            socket = new Socket("localhost", 4444);
-            System.out.println("init socket");
-            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-            new Thread(new ClientComms(this)).start();
-        } catch (IOException e) {
-            System.out.println("Cannot connect to Server");
-        }
-    }
-
-    /**
-     * Submits text to the serer
-     * @param payload a collection of classes
-     */
-    public void send(Payload payload) {
-        try {
-            objectOutputStream.writeObject(payload);
-            objectOutputStream.reset();
-            System.out.println("Sent message ->");
-        } catch (IOException e) {
-            System.out.println("error in print stream");
-            e.printStackTrace();
-        }
-    }
 
     /**
      * Updates the dishes and the post codes
@@ -100,17 +76,15 @@ public class Client implements ClientInterface {
     @Override
     public User register(String username, String password, String address, Postcode postcode) {
         User newUser = new User(username, password, address, postcode);
-        send(new Payload(newUser, TransactionType.requestRegister));
+        comms.send(new Payload(newUser, TransactionType.requestRegister));
 
         synchronized (this) {
             System.out.println("register waiting...");
-
             try {
                 wait();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-
             System.out.println("...register finished waiting");
         }
         return user;
@@ -119,7 +93,7 @@ public class Client implements ClientInterface {
     @Override
     public User login(String username, String password) {
         User returningUser = new User(username, password);
-        send(new Payload(returningUser, TransactionType.requestLogin));
+        comms.send(new Payload(returningUser, TransactionType.requestLogin));
 
         synchronized (this) {
             System.out.println("login waiting...");
@@ -145,7 +119,7 @@ public class Client implements ClientInterface {
             }
             notify();
         }
-        send(new Payload(user, TransactionType.initUser));
+        comms.send(new Payload(user, TransactionType.initUser));
     }
 
     //---------Postcodes----------------------------
@@ -203,7 +177,7 @@ public class Client implements ClientInterface {
         Order newOrder = new Order(user, user.getBasket());
         user.addOrder(newOrder, true);
         clearBasket(user);
-        send(new Payload(newOrder, TransactionType.requestOrder));
+        comms.send(new Payload(newOrder, TransactionType.requestOrder));
         return newOrder;
     }
 
@@ -239,7 +213,7 @@ public class Client implements ClientInterface {
         System.out.println("request to cancel");
         order.setStatus(OrderStatus.CANCELED);
         System.out.println(order.getOrderID());
-        send(new Payload(order, TransactionType.requestCancel));
+        comms.send(new Payload(order, TransactionType.requestCancel));
     }
 
     //----------updates-----------------------------
